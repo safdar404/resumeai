@@ -25,7 +25,16 @@ PAGES = [start.render, add_info.render, corrections.render, target.render, templ
 
 try:
     PAGES[st.session_state.step]()
-except Exception:  # last-resort guard: never show a stack trace with user data
-    logging.getLogger("careerrainbow").exception("Unhandled UI error")
-    st.error("Something went wrong on this step. Your profile is still in this session — try again, or go back a step. "
-             "If it persists, download your profile JSON from the Download step.")
+except Exception as exc:  # show diagnostic location, never exception text or user data
+    import traceback
+    from pathlib import Path
+
+    frames = traceback.extract_tb(exc.__traceback__)
+    own = [frame for frame in frames if "/src/" in frame.filename or frame.filename.endswith("/app.py")]
+    last = own[-1] if own else frames[-1]
+    location = f"{Path(last.filename).name}:{last.lineno}"
+    kind = type(exc).__name__
+    logging.getLogger("careerrainbow").error("UI failed: type=%s location=%s", kind, location)
+    st.error(f"Step {st.session_state.step + 1} stopped: {kind} at {location}. "
+             "Your profile is still available in this session.")
+    st.info("Please share this error code for troubleshooting. You can save your profile JSON from Step 9.")
