@@ -80,4 +80,4 @@ def render() -> None:
                         "- With an AI provider enabled (and only after your consent), text is sent to that provider "
                         "under its terms.\n- API keys are never logged or displayed.")
             st.button("🧹 Clear my session and files", on_click=_clear, width="stretch", type="primary")
-        st.caption("Switch light/dark: ⋮ menu → Settings → Theme.")
+        st.caption("Your story. Your next opportunity. ✦")

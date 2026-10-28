@@ -27,17 +27,23 @@ def _load_sample() -> None:
 
 
 def render() -> None:
-    step_header(0, "Start", "Build an accurate, well-structured resume tailored to a real job — without invented claims.")
+    st.markdown("""<section class="cr-hero"><div class="cr-eyebrow">CAREERRAINBOW AI / YOUR CAREER STUDIO</div>
+<h2>Your experience.<br><span class="cr-gradient-text">A stronger first impression.</span></h2>
+<p>Turn your career story into a clear, job-focused resume. Build, refine and export with a guided workspace that keeps you in control.</p>
+<div class="cr-pills"><span class="cr-pill">✦ 9 guided steps</span><span class="cr-pill">▤ PDF + Word export</span><span class="cr-pill">✓ Fact review</span><span class="cr-pill">◈ 7 font families</span></div></section>
+<div class="cr-route"><b>Your path</b><span>01 · Add your story</span><i>→</i><span>02 · Tailor &amp; refine</span><i>→</i><span>03 · Design &amp; export</span></div>
+<div class="cr-section-label">Choose how you want to begin</div>""", unsafe_allow_html=True)
     cols = st.columns(3)
     entries = [
-        ("Chat", "Build through conversation", "Answer focused questions one at a time. Type *skip* for anything optional.", "#FF4D6D"),
+        ("Chat", "Build through conversation", "Answer focused questions one at a time. Type <em>skip</em> for optional details.", "#FF4D6D"),
         ("Form", "Complete a structured form", "Fill in sections directly. Ideal if you have details ready to paste.", "#22B8F0"),
         ("Upload", "Upload an existing resume", "Text-based PDF, DOCX or TXT — or re-import a saved JSON profile.", "#9B5DE5"),
     ]
     for col, (mode, title, body, color) in zip(cols, entries):
-        with col:
-            card(title, f"<p>{body}</p>", accent=color)
-            st.button("Start here", key=f"start_{mode}", on_click=_begin, args=(mode,), width="stretch",
+        with col, st.container(key=f"entry_{mode}"):
+            icon = {"Chat": "✦", "Form": "▤", "Upload": "↥"}[mode]
+            card(title, f'<div class="cr-entry-icon" style="--cr-c:{color}">{icon}</div><p>{body}</p>', accent=color)
+            st.button({"Chat": "Start a conversation →", "Form": "Open the form →", "Upload": "Upload your resume →"}[mode], key=f"start_{mode}", on_click=_begin, args=(mode,), width="stretch",
                       type="primary" if mode == "Chat" else "secondary")
     st.write("")
     c1, c2 = st.columns([1.2, 1])
