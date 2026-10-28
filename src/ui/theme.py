@@ -73,6 +73,8 @@ CSS = CSS.replace("</style>", '\n/* Override native light-theme surfaces, includ
 
 CSS = CSS.replace("</style>", '.cr-agent-intro { display:flex; flex-direction:column; gap:.4rem; padding:1rem 1.2rem; border:1px solid #9b5de54d; border-radius:16px; background:linear-gradient(110deg,#342047,#102c38); margin-bottom:.7rem; }.cr-agent-intro b { color:#f6eeff; font-size:1.1rem; }.cr-agent-intro span { color:#c6bdd8; font-size:.8rem; }.cr-brand-agent { width:55px;height:55px;object-fit:contain;filter:drop-shadow(0 3px 8px #9b5de533); }' + "</style>")
 
+CSS = CSS.replace("</style>", '\n[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"],\n[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] p,\n[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] li,\n[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] strong,\n[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] em { color:#e8e2f8!important; }\n[data-testid="stChatInput"], [data-testid="stChatInput"]>div,\n[data-testid="stChatInput"] [data-baseweb="textarea"],\n[data-testid="stChatInput"] textarea { background:#1b1730!important; color:#eee8ff!important; border-color:#9b5de550!important; }\n[data-testid="stChatInput"] textarea::placeholder { color:#b8aecf!important; }\n[data-testid="stSidebar"] [data-testid="stButton"] button[kind="primary"] p { color:#151125!important; }\n[data-testid="stChatInputSubmitButton"] { background:#9b5de52b!important; color:#f4eaff!important; }\n' + "</style>")
+
 def inject() -> None:
     st.markdown(CSS, unsafe_allow_html=True)
 
