@@ -293,3 +293,23 @@ career_rainbow_ai/
 - The sidebar templates place contact details in a side column; use their parsing-friendly export for portals.
 
 All sample people, employers and job postings in `examples/` are fictional.
+
+## Model-selected resume tools
+
+When a provider is enabled and processing consent is granted, the copilot uses
+LangChain tool calling with `get_profile`, `update_profile`, `review_profile`,
+`list_templates`, `select_template` and `generate_resume`. One turn can collect
+several facts and execute a requested document workflow. Tool rounds are capped
+at six and twelve calls per turn. Unknown tools and unsupported facts are
+rejected; already saved facts survive provider failures. A completed generation
+returns real designed PDF and Word files through the existing export engine.
+
+Set `LLM_PROVIDER` (or the compatible alias `RESUME_LLM_PROVIDER`) to `openai`,
+`anthropic`, `groq`, `gemini`, or `openai_compatible`. Use the corresponding
+`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GROQ_API_KEY`, `GEMINI_API_KEY`, or
+`OPENAI_COMPATIBLE_API_KEY`. Model overrides use `LLM_MODEL` or
+`RESUME_LLM_MODEL`. The sidebar also supports provider/model selection and
+session-only credentials. Consent remains required before profile data is sent.
+If no provider is configured, offline guidance stays available.
+
+The logo uses a subtle rainbow glow, disabled when reduced motion is requested.

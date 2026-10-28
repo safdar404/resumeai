@@ -77,6 +77,8 @@ CSS = CSS.replace("</style>", '\n[data-testid="stChatMessage"] [data-testid="stM
 
 CSS = CSS.replace("</style>", '\n[data-testid="stButtonGroup"] button, [data-testid="stButtonGroup"] [role="radio"],\n[data-testid="stButtonGroup"] [role="checkbox"], .st-key-entry_mode_ctl button,\n.st-key-entry_mode_ctl label { background:#211b36!important; color:#ddd2f2!important; border-color:#9b5de54d!important; }\n[data-testid="stButtonGroup"] button p, .st-key-entry_mode_ctl p { color:inherit!important; }\n[data-testid="stButtonGroup"] [aria-checked="true"], [data-testid="stButtonGroup"] [aria-pressed="true"],\n.st-key-entry_mode_ctl [aria-checked="true"] { background:#7140ad!important; color:#fff!important; }\n' + "</style>")
 
+CSS = CSS.replace("</style>", '\n@keyframes cr-agent-glow { 0%,100% { filter:drop-shadow(0 0 4px #ff4d6d66); transform:translateY(0); } 50% { filter:drop-shadow(0 0 9px #22b8f077); transform:translateY(-2px); } }\n.cr-brand-agent { animation:cr-agent-glow 5s ease-in-out infinite; border-radius:12px; }\n@media(prefers-reduced-motion:reduce) { .cr-brand-agent { animation:none!important; transform:none!important; } }\n' + "</style>")
+
 def inject() -> None:
     st.markdown(CSS, unsafe_allow_html=True)
 

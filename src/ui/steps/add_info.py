@@ -55,6 +55,10 @@ def _chat() -> None:
     for col, label, command in zip(controls, ["Review profile", "Explore designs", "Generate resume"], ["/review", "/templates", "/generate"]):
         if col.button(label, key="agent_" + command[1:], width="stretch"):
             ss.agent_queued = command
+    if ss.get("agent_trace"):
+        with st.expander("Agent actions · last turn", expanded=False):
+            for tool_name in ss.agent_trace:
+                st.write("→ " + tool_name.replace("_", " ").title())
     box = st.container(height=470, border=True)
     with box:
         for m in ss.chat[-40:]:
@@ -73,10 +77,21 @@ def _chat() -> None:
                    "resume data and cannot change the app's rules.", "info")
         from src.agents.career_assistant import handle_action
         with st.spinner("Your resume assistant is working…"):
-            reply = handle_action(msg)
-            if reply is None:
-                res = S.run_intake("chat", msg)
-                reply = res.get("assistant_message") or "Saved."
+            service = S.llm_service()
+            if service is not None:
+                from src.agents.tool_agent import run_resume_agent
+                from src.services.llm import LLMError
+                try:
+                    reply = run_resume_agent(msg, service)
+                except LLMError as exc:
+                    # Keep partial, already saved facts. Never replace them or
+                    # falsely claim generation succeeded after an API error.
+                    reply = "AI copilot could not finish this turn. " + exc.user_message() + " Your saved profile is still available."
+            else:
+                reply = handle_action(msg)
+                if reply is None:
+                    res = S.run_intake("chat", msg)
+                    reply = res.get("assistant_message") or "Saved."
         ss.chat.append({"role": "assistant", "content": reply})
         st.rerun()
 

@@ -45,7 +45,7 @@ def render() -> None:
             prov = st.selectbox("Provider", provs, index=provs.index(cfg["provider"]),
                                 format_func=lambda k: PROVIDERS[k]["label"])
             if prov != cfg["provider"]:
-                cfg.update(provider=prov, model=PROVIDERS[prov]["default_model"], verified=None, consent=False)
+                cfg.update(provider=prov, model=PROVIDERS[prov]["default_model"], base_url=PROVIDERS[prov].get("base_url", ""), session_key="", verified=None, consent=False)
                 st.rerun()
             if prov != "none":
                 cfg["model"] = st.text_input("Model", cfg["model"])

@@ -98,13 +98,14 @@ class LLMService:
                 raise LLMError("missing_credentials", "missing")
             raise LLMError("invalid_key_format", " ".join(check.problems))
         model = s.model or PROVIDERS[s.provider]["default_model"]
-        if s.provider in ("openai", "openai_compatible"):
+        if s.provider in ("openai", "openai_compatible", "groq", "gemini"):
             from langchain_openai import ChatOpenAI
 
             kwargs = dict(model=model, api_key=s.api_key, temperature=s.temperature,
                           timeout=s.timeout, max_retries=0)
-            if s.base_url:
-                kwargs["base_url"] = s.base_url
+            endpoint = s.base_url or PROVIDERS[s.provider].get("base_url")
+            if endpoint:
+                kwargs["base_url"] = endpoint
             return ChatOpenAI(**kwargs)
         if s.provider == "anthropic":
             from langchain_anthropic import ChatAnthropic
@@ -118,7 +119,7 @@ class LLMService:
         """Invoke ``prompt | model.with_structured_output(schema)`` with bounded
         retries for transient errors and one corrective retry for malformed output."""
         runnable = self._model.with_structured_output(schema, method="function_calling") \
-            if self.settings.provider in ("openai", "openai_compatible") else self._model.with_structured_output(schema)
+            if self.settings.provider in ("openai", "openai_compatible", "groq", "gemini") else self._model.with_structured_output(schema)
         chain = prompt | runnable
         transient_left, format_left = LLM_MAX_TRANSIENT_RETRIES, LLM_MAX_FORMAT_RETRIES
         vars_ = dict(variables)

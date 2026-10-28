@@ -41,6 +41,10 @@ PROVIDERS = {
     "none": {"label": "Offline rules engine (no AI provider)", "default_model": "", "secret": None},
     "openai": {"label": "OpenAI", "default_model": "gpt-4o-mini", "secret": "OPENAI_API_KEY"},
     "anthropic": {"label": "Anthropic", "default_model": "claude-sonnet-4-5", "secret": "ANTHROPIC_API_KEY"},
+    "groq": {"label": "Groq", "default_model": "llama-3.3-70b-versatile", "secret": "GROQ_API_KEY",
+             "base_url": "https://api.groq.com/openai/v1"},
+    "gemini": {"label": "Google Gemini", "default_model": "gemini-2.5-flash", "secret": "GEMINI_API_KEY",
+               "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/"},
     "openai_compatible": {
         "label": "OpenAI-compatible endpoint (Groq, OpenRouter, Ollama, ...)",
         "default_model": "llama-3.3-70b-versatile",
@@ -81,9 +85,10 @@ class ProviderDefaults:
 
 
 def provider_defaults() -> ProviderDefaults:
-    provider = (get_secret("LLM_PROVIDER") or "none")
+    provider = (get_secret("LLM_PROVIDER") or get_secret("RESUME_LLM_PROVIDER") or "none").lower()
     if provider not in PROVIDERS:
         provider = "none"
-    model = get_secret("LLM_MODEL") or PROVIDERS[provider]["default_model"]
-    base_url = get_secret("OPENAI_COMPATIBLE_BASE_URL") or ""
+    model = get_secret("LLM_MODEL") or get_secret("RESUME_LLM_MODEL") or PROVIDERS[provider]["default_model"]
+    base_url = get_secret("OPENAI_COMPATIBLE_BASE_URL") if provider == "openai_compatible" else PROVIDERS[provider].get("base_url", "")
+    base_url = base_url or ""
     return ProviderDefaults(provider=provider, model=model, base_url=base_url)
