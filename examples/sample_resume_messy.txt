@@ -1,0 +1,23 @@
+BILAL HAIDER-NAKAMURA
+Junior Data Analyst
+bilal.hn@example.com | +92 300 0000000 | linkedin.com/in/
+Islamabad, Pakistan
+
+PROFILE
+recent graduate with  intrest in data science and machine learning .
+
+EXPERIENCE
+Data Analyst Intern | Tailspin Toys (fictional), Islamabad
+Jun 2024 - Sep 2024
+- clean sales data in excel and pythn programing for weekly reports
+- build Power BI dashbord for regional sales team
+- worked on the the customer churn analysis
+
+EDUCATION
+BS Computer Science, Riverbend University (fictional), 2020 - 2024, CGPA 3.4/4.0
+
+SKILLS
+Python, pandas, scikit-learn, SQL, Power BI, Excel, communication, teamwork
+
+PROJECTS
+Churn Predictor - logistic regression model on a public telecom dataset

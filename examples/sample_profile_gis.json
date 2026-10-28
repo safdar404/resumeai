@@ -1,0 +1,103 @@
+{
+  "schema_version": "1.0",
+  "full_name": "Amara Okafor-Lindqvist",
+  "headline": "Remote Sensing & GIS Analyst",
+  "contact": {
+    "email": "amara.ol@example.com",
+    "phone": "+44 7700 900123",
+    "city": "Leeds",
+    "country": "United Kingdom",
+    "linkedin": "https://www.linkedin.com/in/amara-ol-example",
+    "github": "https://github.com/amara-ol-example",
+    "portfolio": "",
+    "other_links": []
+  },
+  "summary": "",
+  "experience": [
+    {
+      "title": "Remote Sensing Analyst",
+      "employer": "Northwind Geomatics (fictional)",
+      "location": "Leeds, UK",
+      "start_date": "Jan 2021",
+      "end_date": "",
+      "current": true,
+      "bullets": [
+        "Build Sentinel-2 land-cover classification workflows in Python and Google Earth Engine",
+        "Produced 40 county-level land-cover maps for environmental planning clients",
+        "automate QA checks for raster mosaics using GDAL and rasterio",
+        "Present mapping results to non-technical stakeholders"
+      ]
+    },
+    {
+      "title": "GIS Technician",
+      "employer": "Fabrikam Surveys (fictional)",
+      "location": "Lagos, Nigeria",
+      "start_date": "Jun 2018",
+      "end_date": "Dec 2020",
+      "current": false,
+      "bullets": [
+        "mange GIS databse for utility network records in PostGIS",
+        "Digitise 1,200 km of drainage lines in QGIS from survey sketches",
+        "Supported field teams with GPS data collection and cleaning"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "degree": "MSc",
+      "field_of_study": "Remote Sensing and GIS",
+      "institution": "University of Leeds",
+      "location": "Leeds, UK",
+      "start_date": "2017",
+      "end_date": "2018",
+      "grade": "Merit",
+      "details": []
+    },
+    {
+      "degree": "BSc",
+      "field_of_study": "Geography",
+      "institution": "University of Ibadan",
+      "location": "Ibadan, Nigeria",
+      "start_date": "2012",
+      "end_date": "2016",
+      "grade": "",
+      "details": []
+    }
+  ],
+  "skills": {
+    "technical": ["Python", "QGIS", "ArcGIS Pro", "Google Earth Engine", "PostGIS", "GDAL", "rasterio", "SQL"],
+    "interpersonal": ["Stakeholder communication", "Mentoring"]
+  },
+  "certifications": [
+    {"name": "Esri Technical Certification (fictional sample)", "issuer": "Esri", "date": "2023", "credential_id": ""}
+  ],
+  "projects": [
+    {
+      "name": "Flood Extent Mapper",
+      "role": "Developer",
+      "description": "Open-source notebook that maps flood extent from Sentinel-1 radar imagery",
+      "bullets": [],
+      "technologies": ["Python", "Google Earth Engine"],
+      "link": "https://github.com/amara-ol-example/flood-mapper"
+    }
+  ],
+  "publications": [],
+  "languages": [
+    {"language": "English", "proficiency": "Fluent"},
+    {"language": "Yoruba", "proficiency": "Native"},
+    {"language": "Swedish", "proficiency": "Conversational"}
+  ],
+  "awards": [],
+  "volunteering": [],
+  "referees": [],
+  "include_referees": false,
+  "career_stage": "mid",
+  "target": {
+    "occupation": "GIS Analyst",
+    "sector": "gis",
+    "seniority": "Mid-level",
+    "location": "Leeds, UK",
+    "job_description": ""
+  },
+  "skipped_fields": []
+}

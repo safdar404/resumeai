@@ -1,0 +1,37 @@
+[server]
+maxUploadSize = 5
+enableXsrfProtection = true
+
+[browser]
+gatherUsageStats = false
+
+[client]
+showErrorDetails = "none"
+toolbarMode = "minimal"
+
+[theme]
+font = "sans-serif"
+baseRadius = "0.6rem"
+showSidebarBorder = true
+
+[theme.light]
+primaryColor = "#C2185B"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F6F4FB"
+textColor = "#1B1530"
+linkColor = "#6A2FC9"
+borderColor = "#E3DEF0"
+
+[theme.light.sidebar]
+backgroundColor = "#FBFAFE"
+
+[theme.dark]
+primaryColor = "#FF5C7A"
+backgroundColor = "#13111C"
+secondaryBackgroundColor = "#1E1A2B"
+textColor = "#F2EFFA"
+linkColor = "#7FD1F7"
+borderColor = "#332D47"
+
+[theme.dark.sidebar]
+backgroundColor = "#181523"

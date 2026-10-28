@@ -1,0 +1,13 @@
+Position: Junior Data Scientist (fictional posting — Tailspin Analytics)
+
+Requirements
+- Degree in Computer Science, Statistics, Mathematics or a related field
+- Proficiency in Python, pandas and scikit-learn
+- Experience with SQL for data extraction
+- Understanding of machine learning model evaluation
+- Data visualization with Power BI or Tableau
+- Clear communication with business stakeholders
+
+Desirable
+- Exposure to deep learning frameworks such as PyTorch or TensorFlow
+- Experience deploying models with Docker

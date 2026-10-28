@@ -1,0 +1,18 @@
+Job title: GIS Analyst (fictional posting — Contoso Environmental)
+
+About the role
+Contoso Environmental is looking for a GIS Analyst to support land-use and flood-risk projects.
+
+Requirements
+- 3+ years of experience in a GIS or remote sensing role
+- Strong skills in ArcGIS Pro and QGIS
+- Experience processing satellite imagery (Sentinel or Landsat) for land-cover classification
+- Python scripting for geospatial automation
+- Experience managing spatial databases such as PostGIS or SQL Server
+- Bachelor's degree in Geography, GIS or a related field
+- Ability to communicate results to non-technical stakeholders
+
+Nice to have
+- Experience with LiDAR data
+- Knowledge of Azure or AWS cloud platforms
+- Web mapping with Leaflet or OpenLayers
