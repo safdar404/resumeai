@@ -1,0 +1,19 @@
+# Tested together on Python 3.12.3 (Linux). Pinned for reproducible deploys.
+streamlit==1.66.1
+langchain==1.4.7
+langchain-core==1.7.0
+langgraph==1.2.18
+langgraph-checkpoint==4.3.1
+langchain-openai==1.7.3
+langchain-anthropic==1.7.7
+openai==3.40.0
+anthropic==2.3.0
+pydantic==2.14.1
+python-docx==1.2.0
+reportlab==4.4.10
+pymupdf==2.0
+pyspellchecker==0.9.1
+pandas==3.0.2
+pillow==12.1.1
+python-dotenv==1.2.2
+pytest==9.2.0
