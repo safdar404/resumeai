@@ -19,7 +19,7 @@ from reportlab.platypus import (BaseDocTemplate, Frame, FrameBreak, HRFlowable, 
                                 NextPageTemplate, PageTemplate, Paragraph, Spacer, Table, TableStyle)
 
 from src.models.resume import ResumeDocument, ResumeEntry, ResumeSection
-from src.rendering.common import BASE_MARGIN, DENSITY, RenderInfo, is_hex, page_size, tint
+from src.rendering.common import BASE_MARGIN, DENSITY, RenderInfo, export_document, is_hex, page_size, tint
 from src.rendering.fonts import choose_font, register
 from src.templates.registry import RenderOptions, TemplateSpec
 
@@ -106,7 +106,7 @@ def heading(title: str, spec: TemplateSpec, st: Styles, width: float, style: str
 
 
 def _two_col(left, right, width: float, date_w: float) -> Table:
-    tbl = Table([[left, right]], colWidths=[width - date_w, date_w])
+    tbl = Table([[left, right]], colWidths=[width - date_w, date_w], splitInRow=1)
     tbl.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP"), ("LEFTPADDING", (0, 0), (-1, -1), 0),
                              ("RIGHTPADDING", (0, 0), (-1, -1), 0), ("TOPPADDING", (0, 0), (-1, -1), 0),
                              ("BOTTOMPADDING", (0, 0), (-1, -1), 0)]))
@@ -303,6 +303,7 @@ def render_pdf(doc: ResumeDocument, spec: TemplateSpec, options: RenderOptions, 
     """Render, tightening spacing step by step until the page target is met."""
     from src.rendering.fonts import FONTS
 
+    doc = export_document(doc)
     font_key = options.font if options.font in FONTS else spec.font
     font_key, font_note = choose_font(font_key, _doc_text(doc))
     max_pages = None if options.page_target == "academic" else int(options.page_target)

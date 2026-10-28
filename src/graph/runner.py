@@ -26,6 +26,10 @@ RESULT_KEYS = ("profile", "validation", "corrections", "checked_fields", "assist
                "render_info", "pdf", "docx", "ats_pdf", "ats_docx", "export_report", "progress", "errors", "cancelled")
 
 
+class WorkflowError(RuntimeError):
+    """Safe stage/type information; never include exception text or user data."""
+
+
 class WorkflowRunner:
     def __init__(self) -> None:
         self.thread_id = uuid.uuid4().hex
@@ -52,10 +56,27 @@ class WorkflowRunner:
     def run(self, inputs: dict, llm=None) -> dict[str, Any]:
         if self.pending_interrupt() is not None:
             self.saver.delete_thread(self.thread_id)  # abandon an unanswered pause
-        return self._finish(self.graph.invoke(inputs, self._config(llm)))
+        return self._invoke(inputs, llm)
 
     def resume(self, answers: dict, llm=None) -> dict[str, Any]:
-        return self._finish(self.graph.invoke(Command(resume=answers), self._config(llm)))
+        return self._invoke(Command(resume=answers), llm)
+
+    def _invoke(self, inputs, llm=None) -> dict[str, Any]:
+        try:
+            return self._finish(self.graph.invoke(inputs, self._config(llm)))
+        except Exception as exc:
+            import logging
+
+            snap = self.graph.get_state(self._config(llm))
+            stage = next((name for name in (snap.next or ()) if name), "workflow")
+            # Names originate from our graph, not from uploaded profile fields.
+            kind = type(exc).__name__
+            logging.getLogger("careerrainbow").error("Generation failed: stage=%s type=%s", stage, kind)
+            raise WorkflowError(
+                f"Generation stopped at {stage.replace('_', ' ')} ({kind}). "
+                "Your profile is still available. Try again, or download your profile JSON "
+                "from Step 9 and keep it for recovery."
+            ) from None
 
     def reset(self) -> None:
         self.saver.delete_thread(self.thread_id)

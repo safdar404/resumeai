@@ -53,3 +53,25 @@ class RenderInfo:
                 "margin_mm": self.margin_mm, "font": self.font, "overflow": self.overflow,
                 "notes": list(self.notes), "expected_order": list(self.expected_order),
                 "single_column": self.single_column}
+
+
+def export_document(doc):
+    """Clean XML-forbidden nonprinting characters on an export-only copy.
+
+    Keep the original profile and draft intact. Replace with a space so two
+    words separated by an imported control character do not become one word.
+    Tabs, newlines and all valid Unicode text are preserved.
+    """
+    import re
+    forbidden = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\ud800-\udfff\ufffe\uffff]")
+
+    def clean(value):
+        if isinstance(value, str):
+            return forbidden.sub(" ", value)
+        if isinstance(value, list):
+            return [clean(item) for item in value]
+        if isinstance(value, dict):
+            return {key: clean(item) for key, item in value.items()}
+        return value
+
+    return type(doc).model_validate(clean(doc.model_dump()))

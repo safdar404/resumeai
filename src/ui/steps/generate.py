@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import streamlit as st
 
+from src.graph.runner import WorkflowError
 from src.templates.registry import get_template
 from src.ui import state as S
 from src.ui.components import badge, score_ring, step_header
@@ -29,8 +30,12 @@ def _clarification(payload: dict) -> None:
         go = c1.form_submit_button("Submit answers and continue", type="primary", disabled=not answerable)
         stop = c2.form_submit_button("Cancel")
     if go:
-        with st.spinner("Continuing…"):
-            S.resume_generate(answers)
+        try:
+            with st.spinner("Continuing…"):
+                S.resume_generate(answers)
+        except WorkflowError as exc:
+            st.error(str(exc))
+            return
         st.rerun()
     if stop:
         S.resume_generate({"__cancel__": True})
@@ -58,7 +63,12 @@ def render() -> None:
     if st.button(label, type="primary"):
         with st.status("Working…", expanded=True) as status:
             st.write("Running the resume workflow…")
-            res = S.run_generate()
+            try:
+                res = S.run_generate()
+            except WorkflowError as exc:
+                status.update(label="Generation needs attention", state="error")
+                st.error(str(exc))
+                return
             for msg in res.get("progress") or []:
                 st.write("✓ " + msg)
             if res.get("interrupt"):

@@ -141,3 +141,27 @@ def test_sidebar_docx_uses_fixed_column_widths(gis_profile):
     assert tbl.tblPr.find(qn("w:tblLayout")).get(qn("w:type")) == "fixed"
     left, right = [int(c.get(qn("w:w"))) for c in tbl.tblGrid.findall(qn("w:gridCol"))]
     assert 0.25 < left / (left + right) < 0.38
+
+
+def test_export_handles_hidden_import_characters_without_mutating_draft(gis_profile):
+    spec, opts = get_template('gis_geoai'), RenderOptions()
+    gis_profile.experience[0].bullets[0] = 'Prepared\x0bGIS\x00maps and surveys.'
+    doc = build_document(gis_profile, None, [], spec, opts)
+    before = doc.model_dump()
+    pdf, _ = render_pdf(doc, spec, opts)
+    text = ' '.join(p.get_text() for p in fitz.open(stream=pdf, filetype='pdf'))
+    assert 'Prepared GIS maps and surveys.' in ' '.join(text.split())
+    word = Document(io.BytesIO(render_docx(doc, spec, opts)))
+    assert any('Prepared GIS maps and surveys.' in p.text for p in word.paragraphs)
+    assert doc.model_dump() == before
+    assert '\x0b' in gis_profile.experience[0].bullets[0]
+
+
+def test_gis_oversized_title_splits_across_pages(gis_profile):
+    spec, opts = get_template('gis_geoai'), RenderOptions(page_target='1')
+    gis_profile.experience[0].title = 'GIS Specialist ' * 800 + 'FinalTitleMarker'
+    doc = build_document(gis_profile, None, [], spec, opts)
+    pdf, info = render_pdf(doc, spec, opts)
+    text = ''.join(p.get_text() for p in fitz.open(stream=pdf, filetype='pdf'))
+    assert 'FinalTitleMarker' in text
+    assert info.pages > 1 and info.overflow

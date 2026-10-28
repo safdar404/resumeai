@@ -96,3 +96,19 @@ def test_rerender_flags_user_edit(gis_profile):
                   "matches": res["matches"], "validation": res.get("validation")})
     assert res2["pdf"] and not res2["review"]["passed"]
     assert any(f["action"] == "flagged" for f in res2["review"]["findings"])
+
+
+def test_generation_error_is_safe_and_identifies_stage(gis_profile, monkeypatch):
+    import pytest
+    from src.graph.runner import WorkflowError
+    from src.graph import nodes
+
+    def fail(state):
+        raise ValueError('PRIVATE RESUME CONTENT MUST NOT BE SHOWN')
+
+    monkeypatch.setattr(nodes, 'document_rendering', fail)
+    runner = WorkflowRunner()
+    with pytest.raises(WorkflowError) as err:
+        _gen(runner, gis_profile)
+    assert 'document rendering (ValueError)' in str(err.value)
+    assert 'PRIVATE' not in str(err.value)

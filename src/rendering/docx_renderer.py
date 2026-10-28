@@ -15,7 +15,7 @@ from docx.oxml.ns import qn
 from docx.shared import Mm, Pt, RGBColor
 
 from src.models.resume import ResumeDocument, ResumeEntry, ResumeSection
-from src.rendering.common import is_hex, tint
+from src.rendering.common import export_document, is_hex, tint
 from src.rendering.fonts import FONTS
 from src.templates.registry import RenderOptions, TemplateSpec
 
@@ -216,6 +216,7 @@ def _fix_table_widths(tbl, widths_mm: list[float]) -> None:
 def render_docx(doc: ResumeDocument, spec: TemplateSpec, options: RenderOptions, *, font_key: str | None = None,
                 margin_mm: float = 16.0, body_size: float | None = None, density_spacing: float = 1.0,
                 force_single: bool = False) -> bytes:
+    doc = export_document(doc)
     font_key = font_key or (options.font if options.font in FONTS else spec.font)
     font = FONTS.get(font_key, FONTS["carlito"])["docx"]
     accent = options.accent if is_hex(options.accent) else spec.accent
