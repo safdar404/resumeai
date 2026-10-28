@@ -161,7 +161,19 @@ def run_generate() -> dict:
 
 
 def resume_generate(answers: dict) -> dict:
-    return _after_generate(st.session_state.runner.resume(answers, llm_service()))
+    ss = st.session_state
+    if ss.runner.pending_interrupt() is None:
+        # Editing/importing a profile runs intake and abandons the old graph
+        # checkpoint. Resume from the current facts instead of a missing pause.
+        if answers.get("__cancel__"):
+            ss.interrupt = None
+            return {"cancelled": True, "interrupt": None}
+        from src.agents.validation import apply_answers
+
+        set_profile(apply_answers(ss.profile, answers))
+        ss.interrupt = None
+        return run_generate()
+    return _after_generate(ss.runner.resume(answers, llm_service()))
 
 
 def _after_generate(res: dict) -> dict:

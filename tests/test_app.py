@@ -71,3 +71,23 @@ def test_clear_session_wipes_data():
     next(x for x in at.button if "Clear my session" in x.label).click().run()
     assert at.session_state["session_id"] != old
     assert not at.session_state["profile"].full_name and at.session_state["results"] is None
+
+
+def test_corrected_date_resumes_generation_after_profile_edit():
+    at = _app()
+    next(b for b in at.button if b.label.startswith('Load a fictional')).click().run()
+    p = at.session_state['profile'].model_copy(deep=True)
+    p.education[0].start_date = 'unrecognised date'
+    at.session_state['profile'] = p
+    _goto(at, 5)
+    next(b for b in at.button if b.label.startswith('Generate')).click().run()
+    _no_errors(at)
+    assert at.session_state['interrupt']
+    # Intake triggered by profile edits abandons the old workflow checkpoint.
+    at.session_state['runner'].reset()
+    next(t for t in at.text_input if t.label == 'Start date').set_value('2009')
+    next(t for t in at.text_input if t.label == 'End / expected date').set_value('2011')
+    next(b for b in at.button if b.label == 'Submit answers and continue').click().run()
+    _no_errors(at)
+    assert at.session_state['results']['pdf'].startswith(b'%PDF')
+    assert at.session_state['profile'].education[0].start_date == '2009'

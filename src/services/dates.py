@@ -30,6 +30,10 @@ def parse_date(text: str) -> tuple[int, int | None] | None:
     if not text:
         return None
     t = text.strip().lower().replace(",", " ").replace(".", " ")
+    # Academic-session labels are metadata, not part of the date itself.
+    # Accept only a single explicit date after a known prefix; ranges and
+    # ambiguous free text still require clarification.
+    t = re.sub(r"^(?:academic\s+session|academic\s+year|session|year)\s*:?\s+", "", t)
     if t in PRESENT_WORDS:
         return today()
     m = re.fullmatch(r"(\d{4})-(\d{1,2})(?:-\d{1,2})?", t)

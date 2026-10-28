@@ -75,3 +75,15 @@ def test_referee_requires_permission(gis_profile):
     gis_profile.include_referees = True
     gis_profile.referees = [Referee(name="Dr Example", permission_confirmed=False)]
     assert any("permission" in i.message for i in validate_profile(gis_profile).issues)
+
+
+def test_academic_session_year_is_valid(gis_profile):
+    from src.services.dates import parse_date, range_problem, format_date
+
+    for text in ['Session 2009', 'Academic Session 2009', 'Academic Year: 2009']:
+        assert parse_date(text) == (2009, None)
+        assert format_date(text) == '2009'
+        assert range_problem(text, '2011') is None
+    assert parse_date('Session 2009-2011') is None
+    assert parse_date('Session unknown') is None
+    assert range_problem('Session 2012', '2011') == 'ends before it starts'
