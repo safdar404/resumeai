@@ -31,8 +31,9 @@ def badges(*items: tuple[str, str | None]) -> None:
 
 def step_header(index: int, title: str, lead: str = "") -> None:
     color = RAINBOW[index % len(RAINBOW)]
+    icon = ["🏠", "📝", "🔎", "🎯", "🎨", "✨", "✅", "👀", "📥"][index % 9]
     st.markdown(f'<div class="cr-step" style="--cr-c:{color}"><span class="num">Step {index + 1}</span>'
-                f'<h2>{html.escape(title)}</h2></div>', unsafe_allow_html=True)
+                f'<h2>{icon} {html.escape(title)}</h2></div>', unsafe_allow_html=True)
     if lead:
         st.markdown(f'<p class="cr-lead">{lead}</p>', unsafe_allow_html=True)
 

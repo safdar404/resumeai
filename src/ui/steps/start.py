@@ -30,9 +30,9 @@ def render() -> None:
     st.markdown("""<section class="cr-hero"><div class="cr-eyebrow">CAREERRAINBOW AI / YOUR CAREER STUDIO</div>
 <h2>Your experience.<br><span class="cr-gradient-text">A stronger first impression.</span></h2>
 <p>Turn your career story into a clear, job-focused resume. Build, refine and export with a guided workspace that keeps you in control.</p>
-<div class="cr-pills"><span class="cr-pill">✦ 9 guided steps</span><span class="cr-pill">▤ PDF + Word export</span><span class="cr-pill">✓ Fact review</span><span class="cr-pill">◈ 7 font families</span></div></section>
-<div class="cr-route"><b>Your path</b><span>01 · Add your story</span><i>→</i><span>02 · Tailor &amp; refine</span><i>→</i><span>03 · Design &amp; export</span></div>
-<div class="cr-section-label">Choose how you want to begin</div>""", unsafe_allow_html=True)
+<div class="cr-pills"><span class="cr-pill">🧭 9 guided steps</span><span class="cr-pill">📄 PDF + Word export</span><span class="cr-pill">✅ Fact review</span><span class="cr-pill">🎨 7 font families</span></div></section>
+<div class="cr-route"><b>🚀 Your path</b><span>01 · Add your story</span><i>→</i><span>02 · Tailor &amp; refine</span><i>→</i><span>03 · Design &amp; export</span></div>
+<div class="cr-section-label">✨ Choose how you want to begin</div>""", unsafe_allow_html=True)
     cols = st.columns(3)
     entries = [
         ("Chat", "Build through conversation", "Answer focused questions one at a time. Type <em>skip</em> for optional details.", "#FF4D6D"),
@@ -41,17 +41,16 @@ def render() -> None:
     ]
     for col, (mode, title, body, color) in zip(cols, entries):
         with col, st.container(key=f"entry_{mode}"):
-            icon = {"Chat": "✦", "Form": "▤", "Upload": "↥"}[mode]
+            icon = {"Chat": "💬", "Form": "📝", "Upload": "📤"}[mode]
             kicker = {"Chat": "01 / GUIDED", "Form": "02 / STRUCTURED", "Upload": "03 / IMPORT"}[mode]
             st.markdown(f'<div class="cr-entry-heading"><span class="cr-entry-icon" style="--cr-c:{color}">{icon}</span>'
                         f'<div><span class="cr-entry-kicker">{kicker}</span><h3>{title}</h3></div></div>'
                         f'<p class="cr-entry-description">{body}</p>', unsafe_allow_html=True)
-            st.button({"Chat": "Start a conversation →", "Form": "Open the form →", "Upload": "Upload your resume →"}[mode], key=f"start_{mode}", on_click=_begin, args=(mode,), width="stretch",
+            st.button({"Chat": "💬 Start a conversation →", "Form": "📝 Open the form →", "Upload": "📤 Upload your resume →"}[mode], key=f"start_{mode}", on_click=_begin, args=(mode,), width="stretch",
                       type="primary" if mode == "Chat" else "secondary")
-    st.write("")
     c1, c2 = st.columns([1.2, 1])
     with c1:
-        stage = st.selectbox("Your career stage (adjusts section order and advice)", list(CAREER_STAGES),
+        stage = st.selectbox("🎯 Your career stage (adjusts section order and advice)", list(CAREER_STAGES),
                              format_func=CAREER_STAGES.get,
                              index=list(CAREER_STAGES).index(S.profile().career_stage), key="stage_start")
         if stage != S.profile().career_stage:
@@ -59,9 +58,9 @@ def render() -> None:
             p.career_stage = stage
             S.set_profile(p)
     with c2:
-        st.caption("Just exploring?")
+        st.caption("🔎 Just exploring?")
         st.button("Load a fictional sample candidate", on_click=_load_sample, width="stretch")
-    with st.expander("How CareerRainbow keeps your resume honest", expanded=False):
+    with st.expander("🛡️ How CareerRainbow keeps your resume honest", expanded=False):
         st.markdown(
             "- **No invented facts.** Every generated line is checked against what you provided; unsupported numbers, "
             "tools or employers are reverted automatically.\n"
