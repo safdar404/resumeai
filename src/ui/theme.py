@@ -75,6 +75,8 @@ CSS = CSS.replace("</style>", '.cr-agent-intro { display:flex; flex-direction:co
 
 CSS = CSS.replace("</style>", '\n[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"],\n[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] p,\n[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] li,\n[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] strong,\n[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] em { color:#e8e2f8!important; }\n[data-testid="stChatInput"], [data-testid="stChatInput"]>div,\n[data-testid="stChatInput"] [data-baseweb="textarea"],\n[data-testid="stChatInput"] textarea { background:#1b1730!important; color:#eee8ff!important; border-color:#9b5de550!important; }\n[data-testid="stChatInput"] textarea::placeholder { color:#b8aecf!important; }\n[data-testid="stSidebar"] [data-testid="stButton"] button[kind="primary"] p { color:#151125!important; }\n[data-testid="stChatInputSubmitButton"] { background:#9b5de52b!important; color:#f4eaff!important; }\n' + "</style>")
 
+CSS = CSS.replace("</style>", '\n[data-testid="stButtonGroup"] button, [data-testid="stButtonGroup"] [role="radio"],\n[data-testid="stButtonGroup"] [role="checkbox"], .st-key-entry_mode_ctl button,\n.st-key-entry_mode_ctl label { background:#211b36!important; color:#ddd2f2!important; border-color:#9b5de54d!important; }\n[data-testid="stButtonGroup"] button p, .st-key-entry_mode_ctl p { color:inherit!important; }\n[data-testid="stButtonGroup"] [aria-checked="true"], [data-testid="stButtonGroup"] [aria-pressed="true"],\n.st-key-entry_mode_ctl [aria-checked="true"] { background:#7140ad!important; color:#fff!important; }\n' + "</style>")
+
 def inject() -> None:
     st.markdown(CSS, unsafe_allow_html=True)
 
