@@ -100,7 +100,10 @@ def _chat() -> None:
 def _form() -> None:
     p = S.profile()
     v = st.session_state.profile_version
-    t1, t2, t3, t4, t5 = st.tabs(["Personal", "Experience", "Education & skills", "Projects & more", "Referees"])
+    t1, t2, t3, t4, t5 = st.tabs(
+        ["Personal", "Experience", "Education & skills", "Projects & more", "Referees"],
+        default=st.session_state.get("profile_form_tab", "Personal"),
+        key=f"profile_tabs_{st.session_state.get('profile_form_tab_version', 0)}")
     with t1, st.form(f"f_personal_{v}"):
         c1, c2 = st.columns(2)
         name = c1.text_input("Full name *", p.full_name)

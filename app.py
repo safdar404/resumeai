@@ -7,6 +7,7 @@ import streamlit as st
 
 from src.config import APP_NAME, ASSETS_DIR
 from src.ui import sidebar, state as S, theme
+from src.ui.steps.common import nav_top
 from src.ui.steps import add_info, corrections, download, edit, generate, start, target, templates_step, validate
 
 logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s: %(message)s")
@@ -24,6 +25,7 @@ PAGES = [start.render, add_info.render, corrections.render, target.render, templ
          edit.render, validate.render, download.render]
 
 try:
+    nav_top()
     PAGES[st.session_state.step]()
 except Exception as exc:  # show diagnostic location, never exception text or user data
     import traceback

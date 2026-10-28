@@ -117,3 +117,45 @@ def test_template_selection_marks_exports_outdated():
     assert at.session_state['results_stale']
     _goto(at, 8)
     assert not any(b.label == '⬇ Download PDF' for b in at.get('download_button'))
+
+
+def test_back_navigation_on_every_relevant_step():
+    at = _app()
+    for step in range(1, len(STEPS)):
+        _goto(at, step)
+        _no_errors(at)
+        button = at.button(key=f'top_back_{step}')
+        assert button.label.startswith('← Back to ')
+        button.click().run()
+        assert at.session_state['step'] == step - 1
+
+
+def test_blocked_generate_opens_experience_form_directly():
+    at = _app()
+    _goto(at, 5)
+    next(b for b in at.button if b.label.startswith('Generate')).click().run()
+    # Empty profile also needs contact/name; structural actions must still work.
+    assert any(b.label == '＋ Add experience' for b in at.button)
+    next(b for b in at.button if b.label == '＋ Add experience').click().run()
+    _no_errors(at)
+    assert at.session_state['step'] == 1
+    assert at.session_state['entry_mode'] == 'Form'
+    assert at.session_state['profile_form_tab'] == 'Experience'
+    assert len(at.session_state['profile'].experience) == 1
+    assert at.session_state['interrupt'] is None
+    assert any(b.label == 'Save role' for b in at.button)
+    assert any(b.label == 'Return to Generate →' for b in at.button)
+
+
+def test_action_only_block_has_navigation_and_no_disabled_submit():
+    at = _app()
+    p = at.session_state['profile'].model_copy(deep=True)
+    p.full_name = 'Example Person'; p.contact.email = 'example@example.com'
+    at.session_state['profile'] = p
+    _goto(at, 5)
+    next(b for b in at.button if b.label.startswith('Generate')).click().run()
+    _no_errors(at)
+    assert any(b.label == '＋ Add education' for b in at.button)
+    assert not any(b.label == 'Submit answers and continue' for b in at.button)
+    at.button(key='top_back_5').click().run()
+    assert at.session_state['step'] == 4

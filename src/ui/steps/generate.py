@@ -6,7 +6,7 @@ from src.graph.runner import WorkflowError
 from src.templates.registry import get_template
 from src.ui import state as S
 from src.ui.components import badge, score_ring, step_header
-from src.ui.steps.common import nav_buttons
+from src.ui.steps.common import nav_buttons, open_profile_section
 
 
 def _clarification(payload: dict) -> None:
@@ -17,7 +17,15 @@ def _clarification(payload: dict) -> None:
     for i in action:
         st.error(i["message"])
     if action:
-        st.button("Go to Add information", on_click=S.goto, args=(1,))
+        st.info("Open Step 2 → Form and add at least one entry. Choose a section below, enter your details, "
+                "save them, then return to Generate.")
+        c1, c2, c3 = st.columns(3)
+        c1.button("＋ Add experience", on_click=open_profile_section, args=("experience",), width="stretch", type="primary")
+        c2.button("＋ Add education", on_click=open_profile_section, args=("education",), width="stretch")
+        c3.button("＋ Add project", on_click=open_profile_section, args=("projects",), width="stretch")
+        if not answerable:
+            nav_buttons(next_label=None)
+            return
     with st.form("clarify"):
         answers = {}
         for i in answerable:
@@ -81,6 +89,7 @@ def render() -> None:
     res = ss.results
     if not res:
         st.info("Ready when you are. You can generate now and refine afterwards — your profile stays editable.")
+        nav_buttons(next_label=None)
         return
     if stale:
         st.info("Your profile or settings changed since the last generation. Regenerate to include the changes.")
