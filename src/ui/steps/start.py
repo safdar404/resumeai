@@ -5,7 +5,7 @@ import streamlit as st
 from src.config import EXAMPLES_DIR
 from src.models.profile import CAREER_STAGES, CandidateProfile
 from src.ui import state as S
-from src.ui.components import card, step_header
+from src.ui.components import step_header
 
 
 def _begin(mode: str) -> None:
@@ -42,7 +42,10 @@ def render() -> None:
     for col, (mode, title, body, color) in zip(cols, entries):
         with col, st.container(key=f"entry_{mode}"):
             icon = {"Chat": "✦", "Form": "▤", "Upload": "↥"}[mode]
-            card(title, f'<div class="cr-entry-icon" style="--cr-c:{color}">{icon}</div><p>{body}</p>', accent=color)
+            kicker = {"Chat": "01 / GUIDED", "Form": "02 / STRUCTURED", "Upload": "03 / IMPORT"}[mode]
+            st.markdown(f'<div class="cr-entry-heading"><span class="cr-entry-icon" style="--cr-c:{color}">{icon}</span>'
+                        f'<div><span class="cr-entry-kicker">{kicker}</span><h3>{title}</h3></div></div>'
+                        f'<p class="cr-entry-description">{body}</p>', unsafe_allow_html=True)
             st.button({"Chat": "Start a conversation →", "Form": "Open the form →", "Upload": "Upload your resume →"}[mode], key=f"start_{mode}", on_click=_begin, args=(mode,), width="stretch",
                       type="primary" if mode == "Chat" else "secondary")
     st.write("")

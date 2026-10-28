@@ -104,13 +104,14 @@ def render() -> None:
     with st.spinner("Rendering previews…"):
         cols = st.columns(3)
         for i, t in enumerate(items):
-            with cols[i % 3], st.container(border=True):
+            with cols[i % 3], st.container(border=True, key=f"template_card_{t.id}"):
                 st.image(thumbnail(t.id), width="stretch", caption=f"{t.name} preview (fictional sample)")
                 sel = t.id == cur
                 st.markdown(f"**{t.name}** " + (badge("pass", "Selected") if sel else ""), unsafe_allow_html=True)
                 st.markdown(badge("presentation") if t.presentation_oriented else badge("ats"), unsafe_allow_html=True)
-                st.caption(t.description)
+                st.caption(("Two columns" if t.layout == "sidebar" else "Single column") + " · " + FONTS[t.font]["label"].split(" (")[0])
                 with st.expander("Details"):
+                    st.caption(t.description)
                     st.markdown(f"**Best for:** {', '.join(t.recommended_for)}  \n"
                                 f"**Length options:** {', '.join({'1': '1 page', '2': '2 pages', 'academic': 'academic CV'}[x] for x in t.page_options)}  \n"
                                 f"**Font:** {FONTS[t.font]['label']}  \n**Parsing:** {t.parsing_notes}")
