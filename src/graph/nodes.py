@@ -212,6 +212,7 @@ def document_rendering(state):
                                       body_size=ainfo.body_size, density_spacing=DENSITY[ainfo.density][0],
                                       force_single=True)
     rinfo = info.as_dict()
+    rinfo["template_id"] = tmpl.id
     if info.overflow:
         rinfo["suggestions"] = fit_suggestions(doc, p, _max_pages(opts))
     out.update({"render_info": rinfo, "progress": _progress(state, f"Rendered PDF ({info.pages} page(s)) and DOCX")})

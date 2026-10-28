@@ -30,6 +30,7 @@ def thumbnail(template_id: str) -> bytes:
 
 def _select(tid: str) -> None:
     st.session_state.template_id = tid
+    st.session_state.results_stale = True
     spec = get_template(tid)
     opts = RenderOptions.model_validate(st.session_state.options)
     if opts.page_target not in spec.page_options:
@@ -74,6 +75,7 @@ def _customise() -> None:
                                 disabled_sections=[k for k, s in zip(ed["key"], ed["Show"]) if not s],
                                 section_order=list(ed["key"]), tailor_bullet_order=tailor)
             st.session_state.options = new.model_dump()
+            st.session_state.results_stale = True
             st.toast("Settings applied — regenerate to see them.", icon="🎨")
     if st.button("Reset to template defaults"):
         _select(spec.id)

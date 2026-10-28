@@ -9,10 +9,10 @@ MONTHS = {m: i for i, m in enumerate(
 MONTH_ABBR = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 PRESENT_WORDS = {"present", "current", "now", "ongoing", "today", "till date", "to date"}
 
+_DATE_TOKEN = r"(?:\d{4}-\d{1,2}(?:-\d{1,2})?|\d{1,2}/\d{4}|(?:\d{1,2}\s+)?[A-Za-z]{3,9}\.?\s+\d{4}|\d{4})"
 DATE_RANGE_RE = re.compile(
-    r"(?P<start>(?:[A-Za-z]{3,9}\.?\s+)?\d{4}|\d{1,2}/\d{4}|\d{4}-\d{2})\s*(?:-|–|—|to|until)\s*"
-    r"(?P<end>(?:[A-Za-z]{3,9}\.?\s+)?\d{4}|\d{1,2}/\d{4}|\d{4}-\d{2}|present|current|now|ongoing|till date|to date)",
-    re.IGNORECASE,
+    rf"(?P<start>{_DATE_TOKEN})\s*(?:-|–|—|to|until)\s*"
+    rf"(?P<end>{_DATE_TOKEN}|present|current|now|ongoing|till date|to date)", re.I,
 )
 
 
@@ -44,6 +44,7 @@ def parse_date(text: str) -> tuple[int, int | None] | None:
     if m:
         mo = int(m.group(1))
         return (int(m.group(2)), mo) if 1 <= mo <= 12 else None
+    t = re.sub(r"^\d{1,2}\s+(?=[a-z]{3,9}\s+\d{4}$)", "", t)
     m = re.fullmatch(r"([a-z]{3,9})\s+(\d{4})", t)
     if m and m.group(1)[:3] in MONTHS:
         return int(m.group(2)), MONTHS[m.group(1)[:3]]

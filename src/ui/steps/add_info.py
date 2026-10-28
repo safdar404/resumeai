@@ -6,7 +6,7 @@ import pandas as pd
 import streamlit as st
 from pydantic import ValidationError
 
-from src.config import MAX_CHAT_MESSAGE_CHARS
+from src.config import ASSETS_DIR, MAX_CHAT_MESSAGE_CHARS
 from src.models.profile import (CAREER_STAGES, Award, CandidateProfile, Certification, Education, Experience,
                                 LanguageSkill, Project, Publication, Referee, Volunteer)
 from src.security.untrusted import looks_like_injection
@@ -47,22 +47,37 @@ def _chat() -> None:
         if key:
             ss.asked_counts[key] = ss.asked_counts.get(key, 0) + 1
             ss.next_field = key
-            ss.chat.append({"role": "assistant", "content": "Hi! I'll ask one short question at a time and keep a "
+            ss.chat.append({"role": "assistant", "content": "Hi! I'm your resume copilot. I can review your profile, choose a design and generate your files. I'll ask one short question at a time and keep a "
                             "running profile on the right. Type *skip* for anything optional.\n\n" + q})
+    st.markdown('<div class="cr-agent-intro"><b>✦ Your resume copilot</b><span>Tell your story · Review facts · Choose a design · Create your resume</span></div>', unsafe_allow_html=True)
+    st.caption("AI-assisted extraction and drafting when a provider is enabled; offline guidance otherwise.")
+    controls = st.columns(3)
+    for col, label, command in zip(controls, ["Review profile", "Explore designs", "Generate resume"], ["/review", "/templates", "/generate"]):
+        if col.button(label, key="agent_" + command[1:], width="stretch"):
+            ss.agent_queued = command
     box = st.container(height=470, border=True)
     with box:
         for m in ss.chat[-40:]:
-            with st.chat_message(m["role"], avatar="🌈" if m["role"] == "assistant" else None):
+            with st.chat_message(m["role"], avatar=str(ASSETS_DIR / "career_agent_logo.png") if m["role"] == "assistant" and (ASSETS_DIR / "career_agent_logo.png").exists() else ("🤖" if m["role"] == "assistant" else None)):
                 st.markdown(m["content"])
-    msg = st.chat_input("Type your answer…", max_chars=MAX_CHAT_MESSAGE_CHARS, key="chat_in")
+    msg = st.chat_input("Tell me about your experience, or ask me to review, design or generate your resume…", max_chars=MAX_CHAT_MESSAGE_CHARS, key="chat_in")
+    msg = ss.pop("agent_queued", None) or msg
+    if ss.results:
+        a, b = st.columns(2)
+        a.button("Preview resume", on_click=S.goto, args=(6,), width="stretch", key="agent_preview")
+        b.button("Download files", on_click=S.goto, args=(8,), width="stretch", key="agent_download")
     if msg:
         ss.chat.append({"role": "user", "content": msg})
         if looks_like_injection(msg):
             S.note("Your message contains text that looks like instructions to the AI. It is treated purely as "
                    "resume data and cannot change the app's rules.", "info")
-        with st.spinner("Updating your profile…"):
-            res = S.run_intake("chat", msg)
-        ss.chat.append({"role": "assistant", "content": res.get("assistant_message") or "Saved."})
+        from src.agents.career_assistant import handle_action
+        with st.spinner("Your resume assistant is working…"):
+            reply = handle_action(msg)
+            if reply is None:
+                res = S.run_intake("chat", msg)
+                reply = res.get("assistant_message") or "Saved."
+        ss.chat.append({"role": "assistant", "content": reply})
         st.rerun()
 
 

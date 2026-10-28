@@ -110,7 +110,7 @@ def build_document(p: CandidateProfile, analysis: JobAnalysis | None, matches: l
         kind = "list"
     else:
         items = tech + p.skills.interpersonal
-        kind = "inline"
+        kind = "list" if len(items) > 15 or any(len(x) > 65 for x in items) else "inline"
     sections["skills"] = ResumeSection(key="skills", title=template.title_for("skills"), kind=kind, items=items)
 
     exp_entries = []

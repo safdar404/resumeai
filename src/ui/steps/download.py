@@ -27,7 +27,15 @@ def render() -> None:
         st.error("Some required details are unresolved: " + "; ".join(i["message"] for i in blocking[:3]))
     if res and st.session_state.get("results_stale"):
         st.warning("Your profile or settings changed after these files were generated. Regenerate to include the changes.")
-    if res:
+    stale = bool(res and st.session_state.get("results_stale"))
+    if stale:
+        st.button("Regenerate with selected design", on_click=S.goto, args=(5,), type="primary")
+        st.caption("Previous PDF/DOCX downloads are paused until the selected design is regenerated.")
+    if res and not stale:
+        from src.templates.registry import get_template
+        actual = (res.get("render_info") or {}).get("template_id", "")
+        if actual:
+            st.caption("Export design: " + get_template(actual).name)
         c1, c2 = st.columns(2)
         with c1, st.container(border=True):
             st.markdown("**Designed version** " + badge("ats" if not res.get("ats_pdf") else "presentation"),

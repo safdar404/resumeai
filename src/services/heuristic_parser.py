@@ -14,14 +14,14 @@ SECTION_ALIASES = {
     "summary": ["summary", "professional summary", "profile", "about me", "objective", "career objective",
                 "personal statement", "professional profile"],
     "experience": ["experience", "work experience", "professional experience", "employment history",
-                   "employment", "work history", "career history", "relevant experience"],
+                   "employment", "work history", "career history", "relevant experience", "further professional experience", "research and earlier experience"],
     "education": ["education", "academic background", "qualifications", "academic qualifications",
                   "education and training"],
     "skills": ["skills", "technical skills", "core skills", "key skills", "competencies", "core competencies",
-               "skills and tools", "tools", "technologies"],
+               "skills and tools", "tools", "technologies", "technical toolkit", "geospatial and technical skills", "geospatial technical skills", "professional strengths"],
     "certifications": ["certifications", "certificates", "licenses", "licences", "certifications and training",
-                       "training", "courses"],
-    "projects": ["projects", "selected projects", "key projects", "academic projects", "portfolio"],
+                       "training", "courses", "professional training and credentials", "programming data analytics and ai", "gis remote sensing and spatial data"],
+    "projects": ["projects", "selected projects", "key projects", "academic projects", "portfolio", "python and geoai portfolio", "selected professional contributions"],
     "publications": ["publications", "research", "papers", "conference papers"],
     "languages": ["languages", "language skills"],
     "awards": ["awards", "honours", "honors", "achievements", "awards and honours"],
@@ -29,7 +29,7 @@ SECTION_ALIASES = {
     "references": ["references", "referees"],
 }
 _ALIAS_TO_KEY = {a: k for k, al in SECTION_ALIASES.items() for a in al}
-BULLET_RE = re.compile(r"^\s*(?:[•▪◦●\-–*·]|\d+[.)])\s+")
+BULLET_RE = re.compile(r"^\s*(?:[•▪◦●\-–*·\x00]|\d+[.)])\s+")
 DEGREE_RE = re.compile(r"\b(B\.?Sc|M\.?Sc|B\.?A|M\.?A|B\.?E|M\.?E|B\.?Tech|M\.?Tech|Ph\.?D|MBA|BBA|MPhil|M\.?Phil|"
                        r"Bachelor|Master|Doctor|Diploma|Associate|Certificate|HND|A[- ]Levels?|BS|MS|BEng|MEng|LLB|MBBS|BSN)\b",
                        re.I)
@@ -37,7 +37,7 @@ INSTITUTION_RE = re.compile(r"\b(University|College|Institute|School|Academy|Pol
 
 
 def heading_key(line: str) -> str | None:
-    t = re.sub(r"[^A-Za-z &]", "", line).strip().lower()
+    t = re.sub(r"[^A-Za-z &]", "", line).strip().lower().replace("&", "and")
     if not t or len(t) > 40:
         return None
     return _ALIAS_TO_KEY.get(t)
@@ -135,31 +135,41 @@ def parse_role_line(line: str) -> dict:
     return out
 
 
+ROLE_TITLE_RE = re.compile(r"\b(analyst|specialist|expert|manager|officer|engineer|assistant|associate|consultant|developer|director|professional|technician|coordinator|lecturer|teacher)\b", re.I)
+
+
 def parse_experience_block(lines: list[str]) -> list[Experience]:
     roles: list[Experience] = []
-    pending_header: list[str] = []
+    pending: list[str] = []
     for line in lines:
-        if not line.strip():
+        text = line.strip()
+        if not text:
             continue
-        if BULLET_RE.match(line):
-            text = BULLET_RE.sub("", line).strip()
-            if not roles or pending_header:
-                roles.append(_role_from_header(pending_header))
-                pending_header = []
-            roles[-1].bullets.append(text)
+        bullet = BULLET_RE.match(text)
+        if bullet:
+            if pending or not roles:
+                roles.append(_role_from_header(pending))
+                pending = []
+            roles[-1].bullets.append(BULLET_RE.sub("", text).strip())
             continue
-        if DATE_RANGE_RE.search(line) or not roles or pending_header or len(line) < 70:
-            if roles and not pending_header and not DATE_RANGE_RE.search(line) and len(line) >= 70:
-                roles[-1].bullets.append(line.strip())
-                continue
-            pending_header.append(line.strip())
-            if DATE_RANGE_RE.search(line) and len(pending_header) >= 1 and _header_complete(pending_header):
-                roles.append(_role_from_header(pending_header))
-                pending_header = []
+        dates = DATE_RANGE_RE.search(text)
+        title = len(text) < 100 and bool(ROLE_TITLE_RE.search(text)) and not text.endswith('.')
+        if pending or not roles or title:
+            pending.append(text)
+            if dates and _header_complete(pending):
+                roles.append(_role_from_header(pending)); pending = []
+        elif dates and not roles[-1].start_date and not roles[-1].bullets:
+            dates_only = parse_role_line(text)
+            roles[-1].start_date = dates_only['start_date']
+            roles[-1].end_date = dates_only['end_date']
+            roles[-1].current = dates_only['current']
+        elif roles[-1].bullets:
+            # PDF line wraps continue a responsibility, never a location column.
+            roles[-1].bullets[-1] += ' ' + text
         else:
-            roles[-1].bullets.append(line.strip())
-    if pending_header:
-        roles.append(_role_from_header(pending_header))
+            pending.append(text)
+    if pending:
+        roles.append(_role_from_header(pending))
     return [r for r in roles if r.title or r.employer or r.bullets]
 
 

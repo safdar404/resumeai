@@ -129,10 +129,12 @@ def entry_flowables(e: ResumeEntry, spec: TemplateSpec, st: Styles, width: float
         left1 = Paragraph(f"<b>{esc(first)}</b>" if first else "", st.entry_title)
         out.append(_two_col(left1, Paragraph(esc(e.dates), st.date), width, date_w) if e.dates else left1)
         if second or e.location:
-            if second and e.location:
+            if second and e.location and len(e.location) <= 80:
                 out.append(_two_col(Paragraph(esc(second), st.entry_sub), Paragraph(esc(e.location), st.date), width, date_w))
             else:
-                out.append(Paragraph(esc(second or e.location), st.entry_sub))
+                out.append(Paragraph(esc(second), st.entry_sub))
+                if e.location:
+                    out.append(Paragraph(esc(e.location), st.meta))
     if e.meta:
         out.append(Paragraph(esc(e.meta), st.meta))
     for b in e.bullets:
@@ -170,7 +172,11 @@ def section_flowables(sec: ResumeSection, spec: TemplateSpec, st: Styles, width:
         return out
     if not body:
         return []
-    return [KeepTogether(head + body[:2])] + body[2:]
+    # Keep the section heading with one short first item only. Long content
+    # must be splittable; holding giant skills blocks creates near-empty pages.
+    if body and len(sec.text or "") < 700 and (not sec.items or len(sec.items[0]) < 160):
+        return [KeepTogether(head + body[:1])] + body[1:]
+    return head + body
 
 
 def header_flowables(doc: ResumeDocument, spec: TemplateSpec, st: Styles, include_contact: bool = True) -> list:

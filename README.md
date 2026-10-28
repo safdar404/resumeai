@@ -1,5 +1,21 @@
 # 🌈 CareerRainbow AI — Agentic CV & Resume Studio
 
+## Resume copilot and reliable exports
+
+Open **Resume copilot** to collect career facts conversationally and run the per-session workflow. Natural-language actions include:
+
+- `review my profile` — inspect required facts and malformed imported fields.
+- `use GIS & GeoAI Professional template` — select a named design.
+- `generate my resume` — validate, match, draft, fact-check and export.
+- `preview my resume` — open the editing and preview workspace.
+
+Configure a supported AI provider and grant processing consent in the sidebar for AI extraction and rewriting. Without a provider, the assistant explicitly uses deterministic offline guidance and the same validation/export workflow.
+
+Changing a template or its options invalidates the old PDF/DOCX. Regenerate before downloading so the export matches the selected design. Structurally suspicious imports (a whole paragraph in a location or an oversized Skills field) are held for review rather than silently exported. Fix these in **Add information → Form**, or import the original document again; existing corrupted fields are not guessed or overwritten.
+
+The robot-document logo represents the resume copilot; rainbow accents match the rest of the application family. The logo is used in the sidebar, chat and browser icon.
+
+
 A Streamlit app that turns a conversation, a form or an existing resume into an accurate, tailored,
 well-laid-out resume in **15 designs**, exported to **PDF and DOCX** from one structured model,
 with a transparent readiness score. It runs **fully offline** with a deterministic engine, and can

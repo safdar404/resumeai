@@ -133,6 +133,20 @@ def validate_profile(p: CandidateProfile, unverified: list[str] | None = None) -
         add(Issue(path=path, severity="warning",
                   message="Imported automatically and could not be matched word-for-word to your document — please confirm."))
 
+    for i, role in enumerate(p.experience):
+        for field, limit in (("title", 180), ("employer", 180), ("location", 120)):
+            value = getattr(role, field)
+            if len(value) > limit or "\n" in value or "\x00" in value:
+                add(Issue(path=f"experience[{i}].{field}", severity="error", blocking=True, action_only=True,
+                          message=f"Role {i + 1}: {field} contains a paragraph or imported bullet text. "
+                                  "Review this role in Add information: keep its heading/employer/location short "
+                                  "and move responsibilities into separate achievement lines."))
+    if len(p.skills.technical) > 65 or any(len(v) > 160 for v in p.skills.technical):
+        add(Issue(path="skills.technical", severity="error", blocking=True, action_only=True,
+                  message="Skills contains unusually long text or too many imported items. Review Skills in "
+                          "Add information; keep tools/competencies here and move projects, roles and courses "
+                          "to their own sections before generating."))
+
     # ------------------------------------------------------------ completion
     skipped = set(p.skipped_fields)
     checks = [

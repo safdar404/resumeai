@@ -91,3 +91,29 @@ def test_corrected_date_resumes_generation_after_profile_edit():
     _no_errors(at)
     assert at.session_state['results']['pdf'].startswith(b'%PDF')
     assert at.session_state['profile'].education[0].start_date == '2009'
+
+
+def test_copilot_selects_template_and_generates_resume():
+    at = _app()
+    next(b for b in at.button if b.label.startswith('Load a fictional')).click().run()
+    next(b for b in at.button if b.label == '✦ Open resume copilot').click().run()
+    at.chat_input[0].set_value('use GIS & GeoAI Professional template').run()
+    _no_errors(at)
+    assert at.session_state['template_id'] == 'gis_geoai'
+    at.chat_input[0].set_value('generate my resume').run()
+    _no_errors(at)
+    assert at.session_state['results']['render_info']['template_id'] == 'gis_geoai'
+    assert at.session_state['results']['pdf'].startswith(b'%PDF')
+
+
+def test_template_selection_marks_exports_outdated():
+    at = _app()
+    next(b for b in at.button if b.label.startswith('Load a fictional')).click().run()
+    _goto(at, 5)
+    next(b for b in at.button if b.label.startswith('Generate')).click().run()
+    _goto(at, 4)
+    at.button(key='sel_modern_professional').click().run()
+    _no_errors(at)
+    assert at.session_state['results_stale']
+    _goto(at, 8)
+    assert not any(b.label == '⬇ Download PDF' for b in at.get('download_button'))

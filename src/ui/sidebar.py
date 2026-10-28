@@ -7,6 +7,7 @@ from src.security.credentials import check_api_key, mask
 from src.services.llm import LLMSettings, build_service
 from src.ui import state as S
 from src.ui.components import badge, progress_bar
+from src.ui.theme import logo_markup
 
 
 def _nav_changed() -> None:
@@ -20,10 +21,17 @@ def _clear() -> None:
 
 def render() -> None:
     ss = st.session_state
+    if "agent_destination" in ss:
+        S.goto(ss.pop("agent_destination"))
     with st.sidebar:
-        st.markdown('<div class="cr-brand"><div class="cr-logo" aria-hidden="true">CR</div><div><h1>CareerRainbow AI</h1>'
-                    '<p>Agentic CV &amp; Resume Studio</p></div></div><div class="cr-stripe"></div>',
+        st.markdown('<div class="cr-brand">' + logo_markup() + '<div><h1>CareerRainbow AI</h1>'
+                    '<p>Agentic Resume Copilot</p></div></div><div class="cr-stripe"></div>',
                     unsafe_allow_html=True)
+        def open_copilot():
+            ss.entry_mode = "Chat"
+            ss.entry_mode_ctl = "Chat"
+            S.goto(1)
+        st.button("✦ Open resume copilot", on_click=open_copilot, type="primary", width="stretch")
         if "nav_radio" not in ss:
             ss.nav_radio = S.STEPS[ss.step]
         val = ss.validation or {}
