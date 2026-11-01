@@ -313,3 +313,16 @@ session-only credentials. Consent remains required before profile data is sent.
 If no provider is configured, offline guidance stays available.
 
 The logo uses a subtle rainbow glow, disabled when reduced motion is requested.
+
+
+## Regional formats and automatic quality loop
+
+- **Regional formats:** USA Resume (Letter), Canada Resume (Letter), UK CV (A4), European CV (Europass-style, numeric
+  dates, CEFR languages) and KSA / Gulf CV (A4, nationality, Iqama/visa status and licences raised). Each sets its
+  market's paper size, date style, headings and section order; the job location suggests the right one.
+  Fictional sample profiles live in `examples/regional/`.
+- **Quality loop:** with an AI provider, generation re-drafts the wording (bounded to 2 extra rounds) until the
+  Readiness Score reaches 90% or only evidence gaps remain. The factual review still reverts anything unsupported,
+  and the best-scoring draft is always kept.
+- **Offline improvements:** weak openers ("Responsible for…", "Worked on…", "Helped…") are rewritten to action verbs
+  without adding facts; objective-style summaries are replaced by a factual, keyword-led summary.
