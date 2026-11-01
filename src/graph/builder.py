@@ -3,7 +3,7 @@
 START → start → (intake | profile_validation | factual_review)
 intake → profile_validation → language_correction → compose_reply → END            (mode=intake)
 profile_validation → [clarification ⟲] → job_analysis → evidence_matching →
-  resume_drafting ⇄ factual_review (bounded) → readiness_assessment →
+  resume_drafting ⇄ factual_review (bounded) → readiness_assessment [⟲ AI rewrite until 90%, bounded] →
   layout_planning → document_rendering → export_validation → END                   (mode=generate)
 factual_review → readiness_assessment → … → export_validation → END                 (mode=rerender)
 """
@@ -48,7 +48,8 @@ def build_graph(checkpointer=None):
     g.add_edge("resume_drafting", "factual_review")
     g.add_conditional_edges("factual_review", n.route_after_review,
                             {"resume_drafting": "resume_drafting", "readiness_assessment": "readiness_assessment"})
-    g.add_edge("readiness_assessment", "layout_planning")
+    g.add_conditional_edges("readiness_assessment", n.route_after_readiness,
+                            {"resume_drafting": "resume_drafting", "layout_planning": "layout_planning"})
     g.add_edge("layout_planning", "document_rendering")
     g.add_edge("document_rendering", "export_validation")
     g.add_edge("export_validation", END)

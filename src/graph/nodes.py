@@ -14,7 +14,7 @@ from src.agents.job_analysis import analyse_job
 from src.agents.layout import fit_suggestions, plan_layout
 from src.agents.matching import match_evidence
 from src.agents.validation import apply_answers, validate_profile
-from src.config import MAX_DRAFT_ATTEMPTS
+from src.config import MAX_DRAFT_ATTEMPTS, MAX_QUALITY_ROUNDS, QUALITY_TARGET_PERCENT
 from src.models.corrections import Correction
 from src.models.job import JobAnalysis, RequirementMatch
 from src.models.profile import CandidateProfile
@@ -56,7 +56,8 @@ def _max_pages(opts: RenderOptions) -> int | None:
 
 # ------------------------------------------------------------------ 0. start
 def start(state):
-    return {"progress": [], "errors": [], "cancelled": False}
+    return {"progress": [], "errors": [], "cancelled": False, "quality_rounds": 0, "quality_retry": False,
+            "best_draft": None, "best_score": None}
 
 
 # ------------------------------------------------------------------ 1. intake
@@ -174,15 +175,49 @@ def factual_review(state):
 
 
 # ------------------------------------------------------------------ 9. readiness (provisional)
-def readiness_assessment(state):
+# Wording problems an AI rewrite can fix without new facts. Relevance gaps are never "fixed" by
+# rewriting — only the candidate can add missing experience.
+_FIXABLE = ("Weak opening", "Very short point", "Long point", "Personal pronoun", "Repeated opening verb",
+            "Most points do not start", "Summary is longer")
+
+
+def quality_feedback(score: dict) -> list[str]:
+    out = []
+    for comp in score.get("components", []):
+        if comp.get("key") != "clarity":
+            continue
+        for d in comp.get("deductions", []):
+            if d.get("reason", "").startswith(_FIXABLE):
+                out.append(f"{d['reason']} → {d.get('fix', '')}".strip(" →"))
+    return out
+
+
+def readiness_assessment(state, config: RunnableConfig = None):
     p = _profile(state)
     opts = _options(state)
     score = assess(p, ResumeDocument.model_validate(state["draft"]), get_template(state.get("template_id")),
                    [RequirementMatch.model_validate(m) for m in state.get("matches") or []],
                    JobAnalysis.model_validate(state["job_analysis"]) if state.get("job_analysis") else None,
                    state.get("validation"), [Correction.model_validate(c) for c in state.get("corrections") or []],
-                   max_pages=_max_pages(opts))
-    return {"score": score.model_dump(), "progress": _progress(state, "Assessed readiness (provisional)")}
+                   max_pages=_max_pages(opts)).model_dump()
+    draft = state["draft"]
+    best, best_score = state.get("best_draft"), state.get("best_score")
+    if best and best_score and best_score.get("total", 0) > score.get("total", 0):
+        draft, score = best, best_score          # never ship a rewrite that scored worse
+    else:
+        best, best_score = draft, score
+    pct = 100 * score["total"] / score["max_available"] if score.get("max_available") else 100
+    rounds = int(state.get("quality_rounds") or 0)
+    feedback = quality_feedback(score)
+    retry = bool(_llm(config) and state.get("mode") == "generate" and pct < QUALITY_TARGET_PERCENT
+                 and feedback and rounds < MAX_QUALITY_ROUNDS)
+    update = {"score": score, "draft": draft, "best_draft": best, "best_score": best_score, "quality_retry": retry,
+              "progress": _progress(state, f"Assessed readiness: {score['total']:g}/{score['max_available']}"
+                                    + (f" — improving wording (round {rounds + 1})" if retry else ""))}
+    if retry:
+        update.update({"quality_rounds": rounds + 1, "draft_attempts": 0,
+                       "review_feedback": ["Readiness check found: " + "; ".join(feedback[:10])]})
+    return update
 
 
 # ------------------------------------------------------------------ 10. layout planning
@@ -268,6 +303,10 @@ def route_after_correction(state) -> str:
 
 def route_after_clarification(state) -> str:
     return "end" if state.get("cancelled") else "profile_validation"
+
+
+def route_after_readiness(state) -> str:
+    return "resume_drafting" if state.get("quality_retry") else "layout_planning"
 
 
 def route_after_review(state) -> str:

@@ -40,3 +40,7 @@ class ResumeState(TypedDict, total=False):
     progress: list
     errors: list
     cancelled: bool
+    quality_rounds: int
+    quality_retry: bool
+    best_draft: Optional[dict]
+    best_score: Optional[dict]
