@@ -112,3 +112,58 @@ def test_generation_error_is_safe_and_identifies_stage(gis_profile, monkeypatch)
         _gen(runner, gis_profile)
     assert 'document rendering (ValueError)' in str(err.value)
     assert 'PRIVATE' not in str(err.value)
+
+
+class _StubLLM:
+    """Drafting returns weak wording first, then strong wording once readiness feedback arrives."""
+
+    def __init__(self):
+        self.draft_calls = 0
+        self.feedback_seen = []
+
+    def structured(self, schema, prompt, variables):
+        from src.services.llm import LLMError
+        if schema.__name__ != "_DraftOut":
+            raise LLMError("unavailable", "stub")
+        self.draft_calls += 1
+        self.feedback_seen.append(variables.get("feedback", ""))
+        items = [line.split(": ", 1) for line in variables["bullets"].splitlines() if line.startswith(("experience[", "projects["))]
+        improve = "Readiness check found" in variables.get("feedback", "")
+        out = []
+        for i, text in items:
+            if "dashboards" in text.lower():
+                text = "Built and maintained dashboards used by the wider team every week" if improve else "Worked on dashboards"
+            out.append({"id": i, "text": text})
+        return schema(summary="", bullets=out)
+
+
+def test_quality_loop_rewrites_until_readiness_improves(monkeypatch):
+    from src.graph import nodes
+    monkeypatch.setattr(nodes, "QUALITY_TARGET_PERCENT", 101)   # force the loop for this small profile
+    from src.graph.runner import WorkflowRunner
+    from src.services.heuristic_parser import parse_resume_text
+    p = parse_resume_text("Sam Test\nsam@example.com | +44 7700 900000 | Leeds, UK\n\nEXPERIENCE\n"
+                          "Data Analyst, Example Ltd, Jan 2021 - Present\n- worked on dashboards\n"
+                          "- made reports in Excel, Power BI and SQL for the operations team\n\n"
+                          "EDUCATION\nBSc Computer Science, Example University, 2020\n\nSKILLS\nExcel, SQL, Power BI\n")
+    llm = _StubLLM()
+    r = WorkflowRunner()
+    res = r._finish(r.graph.invoke({"mode": "generate", "profile": p.model_dump(), "template_id": "classic_ats",
+                                    "options": {"page_target": "1"}}, r._config(llm)))
+    assert llm.draft_calls >= 2
+    assert any("Readiness check found" in f for f in llm.feedback_seen)
+    assert any("improving wording" in m for m in res["progress"])
+    bullets = [b for s in res["draft"]["sections"] if s["key"] == "experience" for e in s["entries"] for b in e["bullets"]]
+    assert any(b.startswith("Built and maintained dashboards") for b in bullets)
+    assert llm.draft_calls <= 1 + 2 * 2   # bounded: first draft + MAX_QUALITY_ROUNDS (each may retry once)
+
+
+def test_offline_rewrites_weak_openers_and_objective():
+    from src.agents.drafting import is_objective_style, rule_summary, strengthen_bullet
+    assert strengthen_bullet("responsible for making reports in excel") == "Prepared reports in excel"
+    assert strengthen_bullet("Responsible for managing the GIS database") == "Managed the GIS database"
+    assert strengthen_bullet("worked on dashboards") == "Contributed to dashboards"
+    assert strengthen_bullet("helped team with SQL queries") == "Supported team with SQL queries"
+    assert strengthen_bullet("Built 3 models in Python") == "Built 3 models in Python"
+    assert is_objective_style("To get a challenging job in a reputed organization where i can utilize my skills.")
+    assert not is_objective_style("GIS analyst with 5 years of remote sensing experience.")

@@ -14,12 +14,36 @@ from src.templates.registry import TEMPLATES, RenderOptions, get_template
 INTL_NAMES = ["Zoë Łukasiewicz-Nguyễn", "Δημήτρης Παπαδόπουλος", "Иван Петров", "Søren Ødegård-Çelik"]
 
 
-def test_fifteen_distinct_templates():
-    assert len(TEMPLATES) == 15
-    assert len({t.id for t in TEMPLATES}) == 15
+def test_twenty_distinct_templates_including_regional_formats():
+    assert len(TEMPLATES) == 20
+    assert len({t.id for t in TEMPLATES}) == 20
     sigs = {(t.font, t.heading_style, t.layout, t.accent, tuple(t.section_order[:4]), t.name_align) for t in TEMPLATES}
-    assert len(sigs) == 15
+    assert len(sigs) == 20
     assert {t.id for t in TEMPLATES if t.presentation_oriented} == {"modern_professional", "creative_portfolio"}
+    regional = {t.region: t for t in TEMPLATES if t.region}
+    assert set(regional) == {"USA", "Canada", "UK", "Europe", "KSA / Gulf"}
+    assert regional["USA"].page_size == "Letter" and regional["Canada"].page_size == "Letter"
+    assert regional["UK"].page_size == regional["Europe"].page_size == regional["KSA / Gulf"].page_size == "A4"
+    assert regional["Europe"].date_format == "numeric"
+    assert "referees" not in regional["USA"].section_order
+
+
+def test_regional_personal_details_only_in_regions_that_use_them(gis_profile):
+    from src.templates.registry import region_for_country
+    gis_profile.contact.nationality = "Pakistani"
+    gis_profile.contact.work_authorization = "Transferable Iqama"
+    for tid, shown in (("region_ksa", True), ("region_europe", True), ("region_usa", False), ("classic_ats", False)):
+        spec = get_template(tid)
+        opts = RenderOptions(page_target=spec.default_pages, page_size=spec.page_size or "A4")
+        doc = build_document(gis_profile, None, [], spec, opts)
+        pdf, info = render_pdf(doc, spec, opts)
+        text = " ".join(page.get_text() for page in fitz.open(stream=pdf, filetype="pdf"))
+        assert ("Transferable Iqama" in text) is shown, tid
+        rep = validate_pdf(pdf, doc, gis_profile, int(opts.page_target), info.expected_order)
+        assert rep.passed, (tid, [c for c in rep.checks if not c.passed])
+    assert region_for_country("Riyadh, Saudi Arabia") == "region_ksa"
+    assert region_for_country("Kyiv, Ukraine") == ""
+    assert region_for_country("Leeds, UK") == "region_uk"
 
 
 @pytest.mark.parametrize("spec", TEMPLATES, ids=lambda t: t.id)
@@ -104,7 +128,9 @@ def test_pdf_and_docx_share_content(gis_profile):
     pdf_text = " ".join(fitz.open(stream=pdf, filetype="pdf")[0].get_text().split())
     d = Document(io.BytesIO(render_docx(doc, spec, opts)))
     docx_text = " ".join(" ".join(p.text for p in d.paragraphs).split())
-    for e in gis_profile.experience:
+    exp = next(s for s in doc.sections if s.key == "experience")
+    assert sum(len(e.bullets) for e in exp.entries) == sum(len(e.bullets) for e in gis_profile.experience)
+    for e in exp.entries:
         for b in e.bullets:
             assert b[:30] in pdf_text and b[:30] in docx_text
 
