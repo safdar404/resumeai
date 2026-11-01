@@ -76,6 +76,11 @@ def render() -> None:
         for s in info.get("suggestions", []):
             st.markdown("- " + s)
     val = st.session_state.validation or {}
-    if val.get("missing_for_export"):
-        st.caption("Optional items still missing: " + ", ".join(val["missing_for_export"]))
+    missing = list(val.get("missing_for_export") or [])
+    drafted_summary = any(sec.get("key") == "summary" and (sec.get("text") or "").strip()
+                          for sec in (res.get("draft") or {}).get("sections", []))
+    if drafted_summary:
+        missing = [m for m in missing if m.lower() != "summary"]   # a factual summary was drafted for you
+    if missing:
+        st.caption("Optional items still missing: " + ", ".join(missing))
     nav_buttons(next_label="Download")

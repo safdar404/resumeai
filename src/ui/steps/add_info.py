@@ -117,15 +117,23 @@ def _form() -> None:
         pf = c1.text_input("Portfolio / website", p.contact.portfolio)
         stage = c2.selectbox("Career stage", list(CAREER_STAGES), format_func=CAREER_STAGES.get,
                              index=list(CAREER_STAGES).index(p.career_stage))
+        st.caption("Optional — used only by regional formats (KSA/Gulf, European, UK CVs):")
+        r1, r2, r3 = st.columns(3)
+        nat = r1.text_input("Nationality", p.contact.nationality)
+        auth = r2.text_input("Work authorisation / visa", p.contact.work_authorization,
+                             placeholder="e.g. Transferable Iqama · UK right to work")
+        dl = r3.text_input("Driving licence", p.contact.driving_licence, placeholder="e.g. Saudi licence · Full UK")
         summary = st.text_area("Professional summary (optional — leave blank to have one drafted from your facts)",
                                p.summary, height=100)
-        st.caption("Not needed: photo, date of birth, ID numbers, religion or marital status.")
+        st.caption("Not needed: photo, date of birth, ID/passport numbers, religion or marital status — they can "
+                   "break ATS parsing or invite bias, even where they are customary.")
         if st.form_submit_button("Save personal details", type="primary"):
             q = p.model_copy(deep=True)
             q.full_name, q.headline, q.summary, q.career_stage = name.strip(), headline.strip(), summary.strip(), stage
             c = q.contact
             c.email, c.phone, c.city, c.country = email.strip(), phone.strip(), city.strip(), country.strip()
             c.linkedin, c.github, c.portfolio = li.strip(), gh.strip(), pf.strip()
+            c.nationality, c.work_authorization, c.driving_licence = nat.strip(), auth.strip(), dl.strip()
             _save(q)
             st.rerun()
     with t2:

@@ -22,7 +22,8 @@ def thumbnail(template_id: str) -> bytes:
     """Rendered from the fictional sample candidate (shared, non-personal data)."""
     p = CandidateProfile.model_validate_json((EXAMPLES_DIR / "sample_profile_gis.json").read_text(encoding="utf-8"))
     spec = get_template(template_id)
-    opts = RenderOptions(page_target="1" if "1" in spec.page_options else spec.page_options[0])
+    opts = RenderOptions(page_target="1" if "1" in spec.page_options else spec.page_options[0],
+                         page_size=spec.page_size or "A4", date_format=spec.date_format or "short")
     doc = build_document(p, None, [], spec, opts)
     pdf, _ = render_pdf(doc, spec, opts)
     return page_images(pdf, zoom=0.55, max_pages=1)[0]
@@ -37,6 +38,12 @@ def _select(tid: str) -> None:
         opts.page_target = spec.default_pages  # type: ignore[assignment]
     opts.font = None
     opts.accent = None
+    if spec.page_size:            # regional formats carry their market's paper size and date style
+        opts.page_size = spec.page_size
+    if spec.date_format:
+        opts.date_format = spec.date_format
+    if spec.region:
+        opts.section_order = None  # use the region's section order
     st.session_state.options = opts.model_dump()
 
 
@@ -83,20 +90,23 @@ def _customise() -> None:
 
 
 def render() -> None:
-    step_header(4, "Choose template", "Fifteen designs from one shared, tested renderer. Exported resumes stay restrained "
-                "and professional; colour is a quiet accent.")
+    step_header(4, "Choose template", "Twenty designs — including USA, Canada, UK, European and KSA/Gulf formats — from "
+                "one shared, tested renderer. Exported resumes stay restrained and professional.")
     p = S.profile()
     sector = p.target.sector or detect_sector(p.target.job_description + " " + p.target.occupation)
-    rec = recommended_templates(sector, p.career_stage)
+    rec = recommended_templates(sector, p.career_stage, p.target.location or p.contact.country)
     cur = st.session_state.template_id
     st.markdown("Recommended for you: " + " ".join(badge("ats" if not TEMPLATE_MAP[r].presentation_oriented else "presentation",
                                                        TEMPLATE_MAP[r].name) for r in rec), unsafe_allow_html=True)
     if "tmpl_filter" not in st.session_state:
         st.session_state.tmpl_filter = "All"
-    filt = st.segmented_control("Show", ["All", "Recommended", "Parsing-friendly", "Presentation"], key="tmpl_filter")
+    filt = st.segmented_control("Show", ["All", "Recommended", "Regional formats", "Parsing-friendly", "Presentation"],
+                                key="tmpl_filter")
     items = TEMPLATES
     if filt == "Recommended":
         items = [TEMPLATE_MAP[r] for r in rec]
+    elif filt == "Regional formats":
+        items = [t for t in TEMPLATES if t.region]
     elif filt == "Parsing-friendly":
         items = [t for t in TEMPLATES if not t.presentation_oriented]
     elif filt == "Presentation":
@@ -107,17 +117,26 @@ def render() -> None:
             with cols[i % 3], st.container(border=True, key=f"template_card_{t.id}"):
                 st.image(thumbnail(t.id), width="stretch", caption=f"{t.name} preview (fictional sample)")
                 sel = t.id == cur
-                st.markdown(f"**{t.name}** " + (badge("pass", "Selected") if sel else ""), unsafe_allow_html=True)
+                st.markdown(f"**{t.name}** " + (badge("info", "🌍 " + t.region) if t.region else "")
+                            + (badge("pass", "Selected") if sel else ""), unsafe_allow_html=True)
                 st.markdown(badge("presentation") if t.presentation_oriented else badge("ats"), unsafe_allow_html=True)
                 st.caption(("Two columns" if t.layout == "sidebar" else "Single column") + " · " + FONTS[t.font]["label"].split(" (")[0])
                 with st.expander("🔎 Details"):
                     st.caption(t.description)
                     st.markdown(f"**Best for:** {', '.join(t.recommended_for)}  \n"
                                 f"**Length options:** {', '.join({'1': '1 page', '2': '2 pages', 'academic': 'academic CV'}[x] for x in t.page_options)}  \n"
-                                f"**Font:** {FONTS[t.font]['label']}  \n**Parsing:** {t.parsing_notes}")
+                                f"**Font:** {FONTS[t.font]['label']}  \n**Parsing:** {t.parsing_notes}"
+                                + (f"  \n**Paper:** {t.page_size}" if t.page_size else ""))
+                    if t.region_tips:
+                        st.markdown(f"**{t.region} conventions**\n" + "\n".join(f"- {x}" for x in t.region_tips))
                 st.button("✅ Selected" if sel else "🎨 Use this template", key=f"sel_{t.id}", on_click=_select, args=(t.id,),
                           disabled=sel, width="stretch", type="primary" if not sel else "secondary")
     spec = get_template(cur)
+    if spec.region:
+        c = p.contact
+        if "personal" in spec.section_order and not (c.nationality or c.work_authorization or c.driving_licence):
+            st.info(f"**{spec.name}** shows a Personal Details line when you add nationality, work authorisation / "
+                    "visa status or driving licence (Add information → Personal). All optional.")
     if spec.presentation_oriented:
         st.warning(f"**{spec.name}** is presentation-oriented. A separate single-column, parsing-friendly PDF and DOCX "
                    "will also be generated for online application portals.")
