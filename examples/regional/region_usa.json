@@ -1,0 +1,75 @@
+{
+  "full_name": "Ayesha Rahman (fictional sample)",
+  "headline": "Data Analyst · SQL · Power BI · Python",
+  "contact": {
+    "email": "ayesha.rahman@example.com",
+    "phone": "+00 000 000 0000",
+    "city": "Austin",
+    "country": "TX, USA",
+    "linkedin": "linkedin.com/in/example-ayesha"
+  },
+  "experience": [
+    {
+      "title": "Data Analyst",
+      "employer": "Northwind Telecom (fictional)",
+      "start_date": "Jan 2021",
+      "current": true,
+      "bullets": [
+        "Built 12 Power BI dashboards tracking churn, revenue and network KPIs for 4 regional sales teams",
+        "Wrote SQL queries with CTEs and window functions to automate weekly reporting, cutting preparation time from 2 days to 3 hours",
+        "Cleaned and merged 3 million customer records in Python (pandas) to create a single reporting dataset",
+        "Presented monthly insights to non-technical managers, leading to a revised retention campaign"
+      ]
+    },
+    {
+      "title": "Data Analyst Intern",
+      "employer": "Contoso Bank (fictional)",
+      "start_date": "Jun 2020",
+      "end_date": "Dec 2020",
+      "bullets": [
+        "Prepared Excel reports on branch transactions for the finance team",
+        "Documented 25 data quality issues and tracked fixes with the IT team"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "degree": "BS",
+      "field_of_study": "Computer Science",
+      "institution": "Fabrikam University (fictional)",
+      "end_date": "2020"
+    }
+  ],
+  "skills": {
+    "technical": [
+      "SQL",
+      "Power BI",
+      "Python",
+      "pandas",
+      "Excel",
+      "DAX",
+      "ETL"
+    ],
+    "interpersonal": [
+      "Stakeholder communication",
+      "Problem solving"
+    ]
+  },
+  "certifications": [
+    {
+      "name": "Microsoft Certified: Power BI Data Analyst Associate",
+      "issuer": "Microsoft",
+      "date": "2023"
+    }
+  ],
+  "languages": [
+    {
+      "language": "English",
+      "proficiency": "Fluent"
+    },
+    {
+      "language": "Urdu",
+      "proficiency": "Native"
+    }
+  ]
+}
