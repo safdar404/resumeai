@@ -124,6 +124,15 @@ def match_rules(analysis: JobAnalysis, p: CandidateProfile) -> list[RequirementM
                 for e in sorted(hits, key=_is_skill_list):
                     if e not in evidence:
                         evidence.append(e)
+            sub_missing = _missing_sub_skills(r.text, evidence)
+            if direct and (coverage >= 0.5 or len(direct) >= 2) and sub_missing:
+                # e.g. "Advanced SQL (joins, CTEs, window functions)" backed only by "helped with SQL queries"
+                out.append(RequirementMatch(
+                    **base, status="transferable", strength=0.5, evidence=evidence[:4],
+                    missing_keywords=sub_missing,
+                    note="The core skill is shown, but not the specifics asked for: " + ", ".join(sub_missing)
+                         + ". If you have used them, name them in a bullet."))
+                continue
             if direct and (coverage >= 0.5 or len(direct) >= 2):
                 contextual = any(not _is_skill_list(e) for e in evidence)
                 st = "supported"
@@ -170,6 +179,31 @@ def match_rules(analysis: JobAnalysis, p: CandidateProfile) -> list[RequirementM
     return out
 
 
+_LEVEL_RE = re.compile(r"\b(advanced|expert|expertise|deep|strong|proficient|proficiency|extensive|in-depth|hands-on)\b", re.I)
+
+
+def _missing_sub_skills(req_text: str, evidence: list[Evidence]) -> list[str]:
+    """Specifics listed in brackets after a level qualifier, e.g. 'Advanced SQL (joins, CTEs, window functions)'.
+    Returns the specifics none of the evidence mentions; empty when the requirement has none
+    or when at least one is demonstrated."""
+    m = re.search(r"\(([^)]{3,120})\)", req_text)
+    if not m or not _LEVEL_RE.search(req_text[:m.start()]):
+        return []
+    inner = re.sub(r"^\s*(e\.g\.|eg|i\.e\.|such as|including)\s*", "", m.group(1), flags=re.I)
+    subs = [x.strip(" .") for x in re.split(r",|/|;|\band\b|\bor\b", inner) if x.strip(" .")]
+    if len(subs) < 2:
+        return []
+    text = " ".join(e.text for e in evidence).lower()
+
+    def shown(sub: str) -> bool:
+        words = [w for w in re.findall(r"[a-z0-9+#]+", sub.lower()) if len(w) > 2]
+        stems = [w.rstrip("s") for w in words]
+        return bool(stems) and all(st in text for st in stems)
+    if any(shown(x) for x in subs):
+        return []
+    return subs
+
+
 class _LLMMatch(BaseModel):
     requirement_id: str
     status: str
@@ -196,8 +230,13 @@ def match_evidence(analysis: JobAnalysis, p: CandidateProfile, llm: LLMService |
         errors.append(f"AI evidence matching unavailable ({e.user_message()}) — rule-based matching was used.")
         return rules, errors
     by_id = {m.requirement_id: m for m in res.matches}
+    reqs = {r.id: r for r in analysis.requirements}
     final = []
     for rm in rules:
+        req = reqs.get(rm.requirement_id)
+        if req is not None and req.category == "experience" and req.years:
+            final.append(rm)   # years are computed from the candidate's dates — never overridden by an estimate
+            continue
         lm = by_id.get(rm.requirement_id)
         if not lm or lm.status not in RANK:
             final.append(rm)
