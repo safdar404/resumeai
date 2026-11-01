@@ -1,4 +1,4 @@
-"""Fifteen resume designs, all rendered by the shared engine in
+"""Twenty resume designs (fifteen styles plus five regional formats), all rendered by the shared engine in
 src/rendering. Each spec controls typography, spacing, hierarchy, section
 order and restrained accents."""
 from __future__ import annotations
@@ -11,7 +11,7 @@ SECTION_TITLES = {
     "summary": "Professional Summary", "skills": "Skills", "experience": "Professional Experience",
     "projects": "Projects", "education": "Education", "certifications": "Certifications",
     "publications": "Publications", "languages": "Languages", "awards": "Awards",
-    "volunteering": "Volunteering", "referees": "References",
+    "volunteering": "Volunteering", "referees": "References", "personal": "Personal Details",
 }
 ALL_SECTIONS = list(SECTION_TITLES)
 
@@ -43,6 +43,10 @@ class TemplateSpec(BaseModel):
     default_pages: str = "1"
     parsing_notes: str = ""
     section_titles: dict[str, str] = Field(default_factory=dict)
+    region: str = ""                                   # "", "USA", "Canada", "UK", "Europe", "KSA / Gulf"
+    page_size: Literal["A4", "Letter"] | None = None   # regional paper default
+    date_format: Literal["short", "numeric"] | None = None
+    region_tips: list[str] = Field(default_factory=list)
 
     def title_for(self, key: str) -> str:
         return self.section_titles.get(key, SECTION_TITLES[key])
@@ -160,6 +164,91 @@ TEMPLATES: list[TemplateSpec] = [
                                "Use the parsing-friendly export for online applications."),
 ]
 
+# ---------------------------------------------------------------- regional formats
+# Conventions differ by market. All five stay single-column and parsing-friendly; they differ in
+# paper size, length, date style, headings, section order and which optional details appear.
+REGIONAL_TEMPLATES: list[TemplateSpec] = [
+    TemplateSpec(id="region_usa", name="USA Resume", region="USA",
+                 description="US-standard resume: Letter paper, one page for under ~10 years, achievements first, "
+                             "no photo, age, marital status or references.",
+                 recommended_for=["US employers", "US applicant tracking systems", "Tech & corporate roles"],
+                 font="liberation_sans", accent="#1E3A8A", heading_style="caps_rule", page_size="Letter",
+                 date_format="short", page_options=["1", "2"], default_pages="1",
+                 section_order=["summary", "skills", "experience", "projects", "education", "certifications",
+                                "awards", "volunteering", "languages", "publications"],
+                 section_titles={"summary": "Summary", "experience": "Experience"},
+                 region_tips=["Use Letter paper and keep to 1 page (2 pages for 10+ years).",
+                              "Never include a photo, date of birth, marital status or full street address.",
+                              "Omit 'References available on request' — it wastes a line.",
+                              "Quantify results ($, %, time saved) wherever you know real figures."],
+                 parsing_notes=_ATS),
+    TemplateSpec(id="region_canada", name="Canada Resume", region="Canada",
+                 description="Canadian resume: Letter paper, up to 2 pages, bilingual skills and volunteering "
+                             "valued; no photo or personal data.",
+                 recommended_for=["Canadian employers", "Newcomers to Canada", "Bilingual (EN/FR) roles"],
+                 font="carlito", accent="#B91C1C", heading_style="rule", page_size="Letter", date_format="short",
+                 page_options=["1", "2"], default_pages="2",
+                 section_order=["summary", "skills", "experience", "education", "certifications", "languages",
+                                "volunteering", "projects", "awards", "publications", "referees"],
+                 section_titles={"summary": "Professional Profile", "skills": "Core Skills",
+                                 "volunteering": "Volunteer Experience"},
+                 region_tips=["Letter paper, 1–2 pages; Canadian spelling (e.g. 'organization', 'centre').",
+                              "List English/French levels — bilingualism is a strong differentiator.",
+                              "Include Canadian volunteering or certifications to show local experience.",
+                              "No photo, age, marital status or SIN."],
+                 parsing_notes=_ATS),
+    TemplateSpec(id="region_uk", name="UK CV", region="UK",
+                 description="British CV: A4, up to 2 pages, personal profile, employment history and right-to-work "
+                             "line; references at the end.",
+                 recommended_for=["UK employers", "NHS & public sector", "Graduate schemes"],
+                 font="liberation_sans", accent="#1F2937", heading_style="caps_rule", page_size="A4",
+                 date_format="short", page_options=["1", "2"], default_pages="2",
+                 section_order=["summary", "personal", "skills", "experience", "education", "certifications",
+                                "projects", "languages", "volunteering", "awards", "publications", "referees"],
+                 section_titles={"summary": "Personal Profile", "experience": "Employment History",
+                                 "skills": "Key Skills"},
+                 region_tips=["A4, 2 pages is the norm; UK spelling (e.g. 'organised', 'analysed').",
+                              "State your right to work in the UK if you have it — recruiters screen for it.",
+                              "No photo or date of birth (Equality Act). Driving licence only if relevant.",
+                              "'References available on request' is common; add referees only with permission."],
+                 parsing_notes=_ATS),
+    TemplateSpec(id="region_europe", name="European CV (Europass-style)", region="Europe",
+                 description="EU-style CV: A4, numeric dates, personal details block with nationality and work "
+                             "permit, languages with CEFR levels raised.",
+                 recommended_for=["EU employers", "Germany, Netherlands, Nordics", "International organisations"],
+                 font="dejavu_sans", accent="#1D4ED8", heading_style="bar", page_size="A4", date_format="numeric",
+                 page_options=["1", "2"], default_pages="2",
+                 section_order=["summary", "personal", "experience", "education", "languages", "skills",
+                                "certifications", "projects", "publications", "volunteering", "awards", "referees"],
+                 section_titles={"summary": "About Me", "experience": "Work Experience",
+                                 "education": "Education and Training", "skills": "Digital & Technical Skills",
+                                 "languages": "Language Skills"},
+                 region_tips=["A4, 2 pages; numeric dates (03/2021) are standard.",
+                              "Give language levels on the CEFR scale (A1–C2), e.g. 'German (B2)'.",
+                              "Nationality and work permit status help for non-EU applicants; photo and date of "
+                              "birth are optional and often discouraged for ATS.",
+                              "For Germany, a separate cover letter (Anschreiben) is expected."],
+                 parsing_notes=_ATS + " DejaVu Sans covers accented and Cyrillic characters."),
+    TemplateSpec(id="region_ksa", name="KSA / Gulf CV", region="KSA / Gulf",
+                 description="Saudi Arabia & GCC CV: A4, 2 pages, personal details (nationality, Iqama/visa status, "
+                             "driving licence), certifications and Arabic/English languages raised.",
+                 recommended_for=["Saudi Arabia", "UAE, Qatar, Kuwait, Oman, Bahrain", "Engineering, healthcare, oil & gas"],
+                 font="dejavu_sans", accent="#065F46", heading_style="bar", page_size="A4", date_format="short",
+                 page_options=["1", "2"], default_pages="2",
+                 section_order=["summary", "personal", "experience", "certifications", "skills", "education",
+                                "languages", "projects", "awards", "volunteering", "publications", "referees"],
+                 section_titles={"summary": "Professional Summary", "experience": "Professional Experience",
+                                 "certifications": "Licences & Certifications"},
+                 region_tips=["State nationality and visa status (e.g. 'Transferable Iqama', 'Visit visa', "
+                              "'Available to relocate') — Gulf recruiters filter on it.",
+                              "Raise professional licences (Saudi Council of Engineers, SCFHS, DHA/MOH) near the top.",
+                              "List Arabic and English levels; Saudization (Nitaqat) roles may favour Saudi nationals.",
+                              "A photo is common locally but can break ATS parsing — keep it off online applications."],
+                 parsing_notes=_ATS + " DejaVu Sans supports accented names."),
+]
+TEMPLATES = TEMPLATES + REGIONAL_TEMPLATES
+REGIONS = ["USA", "Canada", "UK", "Europe", "KSA / Gulf"]
+
 TEMPLATE_MAP = {t.id: t for t in TEMPLATES}
 DEFAULT_TEMPLATE = "classic_ats"
 
@@ -168,10 +257,13 @@ def get_template(template_id: str | None) -> TemplateSpec:
     return TEMPLATE_MAP.get(template_id or DEFAULT_TEMPLATE, TEMPLATE_MAP[DEFAULT_TEMPLATE])
 
 
-def recommended_templates(sector: str, career_stage: str) -> list[str]:
+def recommended_templates(sector: str, career_stage: str, location: str = "") -> list[str]:
     from src.services.taxonomy import SECTORS
 
     rec = list(SECTORS.get(sector, {}).get("templates", []))
+    regional = region_for_country(location)
+    if regional:
+        rec.insert(0, regional)
     stage = {"graduate": "graduate_starter", "career_changer": "career_transition",
              "researcher": "academic_research", "executive": "compact_executive"}.get(career_stage)
     if stage:
@@ -195,3 +287,28 @@ class RenderOptions(BaseModel):
     disabled_sections: list[str] = Field(default_factory=list)
     section_order: list[str] | None = None
     tailor_bullet_order: bool = True
+
+
+_REGION_PATTERNS = [
+    ("region_ksa", r"saudi|ksa|riyadh|jeddah|dammam|khobar|uae|emirates|dubai|abu dhabi|sharjah|qatar|doha|kuwait|"
+                   r"oman|muscat|bahrain|manama|gulf|gcc"),
+    ("region_uk", r"united kingdom|uk|u\.k\.|england|scotland|wales|northern ireland|london|manchester|"
+                  r"birmingham|leeds|glasgow|edinburgh|britain"),
+    ("region_canada", r"canada|toronto|vancouver|montreal|calgary|ottawa|edmonton|ontario|quebec|alberta"),
+    ("region_usa", r"usa|u\.s\.a?\.?|us|united states|america|new york|california|texas|florida|seattle|chicago|"
+                   r"boston|san francisco|washington,? dc"),
+    ("region_europe", r"europe|eu|germany|deutschland|france|netherlands|spain|italy|sweden|norway|denmark|finland|"
+                      r"ireland|belgium|austria|switzerland|poland|portugal|czech|berlin|munich|hamburg|frankfurt|"
+                      r"amsterdam|rotterdam|paris|madrid|barcelona|milan|rome|dublin|stockholm|copenhagen|oslo|"
+                      r"helsinki|vienna|zurich|brussels|warsaw|lisbon|prague"),
+]
+
+
+def region_for_country(place: str) -> str:
+    """Suggest a regional format (template id) from a job location or country, or '' if unknown."""
+    import re
+    text = (place or "").lower()
+    for tid, pat in _REGION_PATTERNS:
+        if re.search(rf"(?<![a-z])(?:{pat})(?![a-z])", text):
+            return tid
+    return ""
