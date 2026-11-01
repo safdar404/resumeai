@@ -57,6 +57,11 @@ class Contact(_Base):
     github: str = ""
     portfolio: str = ""
     other_links: list[Link] = Field(default_factory=list)
+    # Optional, region-specific details. Shown only by regional templates that expect them
+    # (e.g. KSA/Gulf, European, UK CVs). Never required.
+    nationality: str = ""
+    work_authorization: str = ""   # e.g. "Transferable Iqama", "Full UK right to work", "EU work permit"
+    driving_licence: str = ""
 
 
 class Experience(_Base):
