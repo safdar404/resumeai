@@ -36,6 +36,8 @@ LLM_MAX_TRANSIENT_RETRIES = 2      # bounded retries for timeouts / rate limits 
 LLM_MAX_FORMAT_RETRIES = 1         # one retry for malformed structured output
 LLM_TIMEOUT_SECONDS = 60
 MAX_DRAFT_ATTEMPTS = 2             # drafting <-> factual review loop bound
+MAX_QUALITY_ROUNDS = 2             # extra AI rewrite rounds driven by the readiness score
+QUALITY_TARGET_PERCENT = 90        # stop improving once the readiness score reaches this
 
 PROVIDERS = {
     "none": {"label": "Offline rules engine (no AI provider)", "default_model": "", "secret": None},
