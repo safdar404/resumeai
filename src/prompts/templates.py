@@ -67,13 +67,24 @@ or needs_clarification. Be conservative: a skill name alone in a skills list is 
 
 DRAFTING_PROMPT = ChatPromptTemplate.from_messages([
     ("system", GUARDRAILS + """
-Task: tailor resume wording for the target role using ONLY the candidate's facts.
-- summary: 2-3 concise sentences (max 60 words), third person implied, no pronouns. Mention only skills,
-  sectors and experience present in the candidate data. Do not state a years-of-experience figure unless
-  it equals {years_experience} (computed from dates). No buzzword stuffing.
-- bullets: rewrite each listed bullet to be concise (max ~28 words), action-verb first, relevant to the
-  job language where the candidate's fact genuinely supports it. Keep every number, name and tool exactly.
-  Never add metrics, tools, employers or outcomes that are not in the original bullet.
+Task: rewrite the resume so it is recruiter-ready and ATS-friendly for the target role, using ONLY the
+candidate's facts. Rewrite EVERY bullet — do not return weak bullets unchanged.
+summary (2-3 sentences, 35-60 words, no pronouns, no "seeking"/"objective" wording):
+- Open with the role identity and, when it is above 0, "{years_experience}+ years of experience" — never another figure.
+- Name the candidate's strongest tools/skills, preferring these job keywords the candidate already has: {keywords}.
+- Mention sectors or kinds of work that appear in the candidate data. No buzzwords ("hard-working", "dynamic").
+bullets (each 12-28 words):
+- Start with a strong, specific past-tense action verb (Built, Automated, Analysed, Prepared, Developed,
+  Streamlined, Delivered...). Bullets of current roles ({current_roles}) may use present tense, but use ONE tense
+  consistently within a role. Vary opening verbs across a role.
+- NEVER start with: Responsible for, Worked on, Helped, Assisted, Did, Involved in, Participated in, Tasked with,
+  Duties included. Avoid vague words like "various", "etc.", "stuff".
+- Structure: action + what/for whom + tool/method (+ result only if the original states it).
+- Where the candidate's original point genuinely involves a job keyword ({keywords}), use the job's exact
+  wording for it (e.g. "Power BI dashboards", "SQL queries"). Never introduce a tool/skill the original point
+  does not mention.
+- Keep every number, name and tool exactly. Never add metrics, tools, employers, scope or outcomes that are
+  not in the original bullet.
 - Return each bullet with its exact id.
 {feedback}
 {format_feedback}"""),
