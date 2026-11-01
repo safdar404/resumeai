@@ -32,7 +32,9 @@ STANDARD_HEADINGS = {t.lower() for t in SECTION_TITLES.values()} | {
     "work experience", "employment history", "academic & professional appointments", "core competencies",
     "technical skills", "key competencies", "clinical skills", "transferable skills", "technical toolkit",
     "geospatial & technical skills", "licences & certifications", "professional qualifications",
-    "research projects", "relevant projects", "grants & awards", "references", "volunteer experience"}
+    "research projects", "relevant projects", "grants & awards", "references", "volunteer experience",
+    "personal profile", "personal details", "about me", "education and training", "digital & technical skills",
+    "language skills", "core skills", "key skills"}
 WEAK_STARTS = ("responsible for", "worked on", "helped with", "duties included", "tasked with", "involved in",
                "in charge of", "assisted with", "participated in")
 PRONOUN_RE = re.compile(r"\b(I|me|my|mine|we|our)\b")
