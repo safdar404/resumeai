@@ -58,6 +58,9 @@ COMMON_MISSPELLINGS = {
     "finanical": "financial", "budjet": "budget", "teachng": "teaching", "curriculm": "curriculum",
     "studnets": "students", "langauge": "language", "langauges": "languages", "certifcate": "certificate",
     "certfication": "certification", "univeristy": "university", "universty": "university",
+    "querys": "queries", "quries": "queries", "qeuries": "queries", "dashbaords": "dashboards",
+    "dashbord": "dashboard", "dashbords": "dashboards", "reponsible": "responsible", "resposible": "responsible",
+    "cleanning": "cleaning", "clening": "cleaning", "utilze": "utilize", "reputated": "reputed",
     "bachlor": "bachelor", "bachelors": "bachelor's", "masters": "master's",
 }
 

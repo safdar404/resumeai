@@ -76,7 +76,7 @@ def extract_contact(text: str, profile: CandidateProfile) -> list[str]:
     if not c.phone:
         for m in PHONE_RE.finditer(text):
             digits = re.sub(r"\D", "", m.group(0))
-            if 7 <= len(digits) <= 15 and not DATE_RANGE_RE.search(m.group(0)) and not re.fullmatch(r"(19|20)\d{2}\s*[-–]\s*(19|20)\d{2}", m.group(0).strip()):
+            if 7 <= len(digits) <= 15 and not DATE_RANGE_RE.fullmatch(m.group(0).strip()) and not re.fullmatch(r"(19|20)\d{2}\s*[-–]\s*(19|20)\d{2}", m.group(0).strip()):
                 c.phone = normalize_ws(m.group(0)); filled.append("phone")
                 break
     for m in URL_RE.finditer(text):
@@ -111,6 +111,8 @@ def parse_role_line(line: str) -> dict:
         else:
             out["end_date"] = end
         s = (s[:m.start()] + s[m.end():]).strip(" ,|–—-()")
+        if s.count("(") > s.count(")"):
+            s += ")"   # keep "Sample Bank (fictional)" intact after the dates are removed
     parts = None
     for sep in (" at ", " @ ", " — ", " – ", " | ", " - "):
         if sep in s:
@@ -135,7 +137,7 @@ def parse_role_line(line: str) -> dict:
     return out
 
 
-ROLE_TITLE_RE = re.compile(r"\b(analyst|specialist|expert|manager|officer|engineer|assistant|associate|consultant|developer|director|professional|technician|coordinator|lecturer|teacher)\b", re.I)
+ROLE_TITLE_RE = re.compile(r"\b(analyst|specialist|expert|manager|officer|engineer|assistant|associate|consultant|developer|director|professional|technician|coordinator|lecturer|teacher|intern|internship|trainee|apprentice|executive|administrator|scientist|designer|architect|supervisor|accountant|nurse|researcher|representative|lead|head|clerk|instructor|tutor|programmer|auditor|advisor|adviser)\b", re.I)
 
 
 def parse_experience_block(lines: list[str]) -> list[Experience]:
@@ -154,7 +156,10 @@ def parse_experience_block(lines: list[str]) -> list[Experience]:
             continue
         dates = DATE_RANGE_RE.search(text)
         title = len(text) < 100 and bool(ROLE_TITLE_RE.search(text)) and not text.endswith('.')
-        if pending or not roles or title:
+        # A non-bullet line with a date range after a role's bullets starts a new role
+        # (e.g. "Intern, Sample Bank, Jun 2020 - Dec 2020"), never a continuation.
+        new_header = bool(dates) and len(text) < 120 and bool(roles) and bool(roles[-1].bullets) and not pending
+        if pending or not roles or title or new_header:
             pending.append(text)
             if dates and _header_complete(pending):
                 roles.append(_role_from_header(pending)); pending = []
@@ -257,24 +262,46 @@ def split_list(lines: list[str]) -> list[str]:
     return out
 
 
-SOFT_SKILLS = {"communication", "teamwork", "leadership", "problem solving", "problem-solving", "time management",
+SOFT_SKILLS = {"team player", "hard working", "hard-working", "hardworking", "self-motivated", "self motivated",
+               "fast learner", "quick learner", "punctual", "honest", "dedicated", "motivated", "multitasking",
+               "multi-tasking", "work ethic", "flexible", "reliable", "positive attitude", "decision making",
+               "analytical thinking", "communication skills", "team work", "team management", "emotional intelligence",
+               "communication", "teamwork", "leadership", "problem solving", "problem-solving", "time management",
                "collaboration", "adaptability", "critical thinking", "attention to detail", "stakeholder management",
                "negotiation", "presentation", "mentoring", "organisation", "organization", "creativity",
                "public speaking", "customer service", "conflict resolution", "interpersonal skills"}
 
 
+_PERSONAL_RES = {
+    "nationality": re.compile(r"^\s*nationality\s*[:\-–]\s*(.{2,40})$", re.I | re.M),
+    "work_authorization": re.compile(r"^\s*(?:visa(?:\s+status)?|iqama(?:\s+status)?|work\s+(?:permit|authori[sz]ation)|"
+                                     r"right\s+to\s+work)\s*[:\-–]\s*(.{2,60})$", re.I | re.M),
+    "driving_licence": re.compile(r"^\s*driving\s+licen[cs]e\s*[:\-–]\s*(.{2,40})$", re.I | re.M),
+}
+
+
 def parse_resume_text(text: str) -> CandidateProfile:
     profile = CandidateProfile()
+    for field, rx in _PERSONAL_RES.items():
+        m = rx.search(text)
+        if m:
+            setattr(profile.contact, field, m.group(1).strip())
+    text = "\n".join(l for l in text.splitlines() if not any(rx.match(l) for rx in _PERSONAL_RES.values()))
     header, sections = split_sections(text)
     extract_contact(text, profile)
-    for line in header:
+    header_parts = [seg.strip() for line in header for seg in re.split(r"\s+[|•·]\s+|\t+", line) if seg.strip()]
+    for line in header_parts:
         s = line.strip()
         if not s or EMAIL_RE.search(s) or URL_RE.fullmatch(s) or sum(ch.isdigit() for ch in s) > 5:
             continue
         if not profile.full_name and len(s.split()) <= 5 and not heading_key(s):
             profile.full_name = s.title() if s.isupper() else s
             continue
-        if profile.full_name and not profile.headline and len(s) <= 90 and "|" not in s:
+        looks_like_place = ("," in s and len(s) <= 60 and len(s.split()) <= 6 and not ROLE_TITLE_RE.search(s))
+        if profile.full_name and looks_like_place and not profile.contact.city:
+            bits = [b.strip() for b in s.split(",")]
+            profile.contact.city, profile.contact.country = bits[0], bits[-1] if len(bits) > 1 else ""
+        elif profile.full_name and not profile.headline and len(s) <= 90 and "|" not in s:
             profile.headline = s
         elif profile.full_name and "," in s and len(s) <= 60 and not profile.contact.city:
             bits = [b.strip() for b in s.split(",")]
@@ -294,7 +321,7 @@ def parse_resume_text(text: str) -> CandidateProfile:
             name = re.sub(r"[,(–-]*\s*\b(19|20)\d{2}\b\)?", "", item).strip(" ,–-")
             issuer = ""
             if " — " in name or " - " in name:
-                name, issuer = re.split(r" — | - ", name, 1)
+                name, issuer = re.split(r" — | - ", name, maxsplit=1)
             profile.certifications.append(Certification(name=name.strip(), issuer=issuer.strip(), date=y.group(0) if y else ""))
     if "projects" in sections:
         cur = None
